@@ -40,6 +40,25 @@ def trim_image(path, coordinates):
     new_img.save('trimed.jpg')    
 
 
+def crop_center(path, crop_width, crop_height):
+    # 画像の中心を切り出す
+    img = Image.open(path)
+    img_width, img_height = img.size
+    new_img = img.crop((
+        (img_width - crop_width) // 2,
+        (img_height - crop_height) // 2,
+        (img_width + crop_width) // 2,
+        (img_height + crop_height) // 2
+    )) 
+    new_img.save('center.jpg')
+
+
+def crop_max_square(path):
+    # 長方形から最大サイズの正方形を切り出す
+    img = Image.open(path)
+    crop_center(path, min(img.size), min(img.size))
+
+
 def grey_scale(path):
     img = Image.open(path)
     new_img = img.convert('L')
@@ -120,7 +139,10 @@ def drawing(path):
 if __name__ == '__main__':
     path = 'lena.jpg'
     # path1 = '2883.png'
-    drawing(path)
+    path2 = '19883_en_1.jpg'
+    # crop_max_square(path2)
+    crop_center(path2, 300, 300)
+    # drawing(path)
     # write_text(path)
     # gause(path)
     # mosaic_over(path)
