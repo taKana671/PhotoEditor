@@ -22,7 +22,8 @@ def rotate_image(path, angle):
     img = Image.open(path)
     new_img = img.rotate(angle)
     new_img.save('rotate.jpg')
-
+    im_rotate = img.rotate(45, fillcolor=(255, 128, 0), expand=True)
+    im_rotate.save('rotate2.jpg')
 
 def transpose_image(path):
     img = Image.open(path)
@@ -141,7 +142,7 @@ if __name__ == '__main__':
     # path1 = '2883.png'
     path2 = '19883_en_1.jpg'
     # crop_max_square(path2)
-    crop_center(path2, 300, 300)
+    # crop_center(path2, 300, 300)
     # drawing(path)
     # write_text(path)
     # gause(path)
@@ -150,6 +151,6 @@ if __name__ == '__main__':
     # grey_scale(path)
     # trim_image(path, (170, 170, 400, 400))
     # transpose_image(path)
-    # rotate_image(path, 45)
+    rotate_image(path2, 45)
     # resize_image(path)
     # get_image_data(path1)
