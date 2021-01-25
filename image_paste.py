@@ -44,13 +44,29 @@ def use_mask2(img1, img2):
     back.save('heart_flower.jpg')
 
 
+def composite(img1, img2):
+    mask = Image.new('L', img1.size, 128)
+    img = Image.composite(img1, img2, mask)
+    # img = Image.blend(img1, img2, 0.5)
+    img.save('composite2.jpg')
+
+
+
 
 if __name__ == '__main__':
     path1 = '18980_en_1.jpg'
-    path2 = 'center.jpg'
+    # path2 = 'center.jpg'
     # path2 = '19883_en_1.jpg'
+    path2 = '19694_en_1.jpg'
+    
     img1 = Image.open(path1)
     img2 = Image.open(path2)
-    use_mask2(img1, img2)
+    # composite(img1, img2)
+
+    mask = Image.open('gray_gradient_v.jpg').convert('L').resize(img1.size)
+    new = Image.composite(img1, img2, mask)
+    new.save('comosite4.jpg')
+
+    # use_mask2(img1, img2)
     # paste_image_position(img1, img2, 150, 100)
     # paste_image(img1, img2)
