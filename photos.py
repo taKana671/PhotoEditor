@@ -1,4 +1,4 @@
-from PIL import Image, ImageFilter, ImageDraw, ImageFont
+from PIL import Image, ImageFilter, ImageDraw, ImageFont, ImageOps
 
 
 def get_image_data(path):
@@ -135,12 +135,37 @@ def drawing(path):
     new_img.save('draw_orval.jpg')
 
 
+def invert_img(path):
+    # 各画素の値を最大値（8ビットの場合は255）から引いた値に置き換えているだけ。
+    # 例えば、0は255、64は191、255は0となる
+    img = Image.open(path)
+    img_invert = ImageOps.invert(img)
+    img_invert.save('invert.jpg')
+
+
+def invert_png(path):
+    # 透過pngをopen()で読み込むとmodeがRGBAとなり正しく処理されないので、
+    # convert()でRGBに変換する。
+    img = Image.open(path).convert('RGB')
+    img_invert = ImageOps.invert(img)
+    img_invert.save('invert_png.png')
+
+
+def flip_mirror(path):
+    img = Image.open(path)
+    img_flip = ImageOps.flip(img)
+    img_flip.save('flip.jpg')
+    img_mirror = ImageOps.mirror(img)
+    img_mirror.save('mirror.jpg')
+
 
 
 if __name__ == '__main__':
     path = 'lena.jpg'
     # path1 = '2883.png'
     path2 = '19883_en_1.jpg'
+    flip_mirror('heart_flower.jpg')
+    # invert_png('2883.png')
     # crop_max_square(path2)
     # crop_center(path2, 300, 300)
     # drawing(path)
