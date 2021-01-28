@@ -41,9 +41,9 @@ def trim_image(path, coordinates):
     new_img.save('trimed.jpg')    
 
 
-def crop_center(path, crop_width, crop_height):
+def crop_center(img, crop_width, crop_height):
     # 画像の中心を切り出す
-    img = Image.open(path)
+    # img = Image.open(path)
     img_width, img_height = img.size
     new_img = img.crop((
         (img_width - crop_width) // 2,
@@ -51,13 +51,38 @@ def crop_center(path, crop_width, crop_height):
         (img_width + crop_width) // 2,
         (img_height + crop_height) // 2
     )) 
-    new_img.save('center.jpg')
+    return new_img
 
 
-def crop_max_square(path):
-    # 長方形から最大サイズの正方形を切り出す
-    img = Image.open(path)
-    crop_center(path, min(img.size), min(img.size))
+def crop_max_square(img):
+    return crop_center(img, min(img.size), min(img.size))
+
+
+def mask_circle_solid(img, background_color, blur_radius, offset=0):
+    background = Image.new(img.mode, img.size, background_color)
+    offset = blur_radius * 2 + offset
+    mask = Image.new("L", img.size, 0)
+    draw = ImageDraw.Draw(mask)
+    draw.ellipse((offset, offset, img.size[0] - offset, img.size[1] - offset), fill=255)
+    mask = mask.filter(ImageFilter.GaussianBlur(blur_radius))
+    return Image.composite(img, background, mask)
+
+
+def mask_circle_transparent(img, blur_radius, offset=0):
+    offset = blur_radius * 2 + offset
+    mask = Image.new("L", img.size, 0)
+    draw = ImageDraw.Draw(mask)
+    draw.ellipse((offset, offset, img.size[0] - offset, img.size[1] - offset), fill=255)
+    mask = mask.filter(ImageFilter.GaussianBlur(blur_radius))
+    result = img.copy()
+    result.putalpha(mask)
+    return result
+
+
+# def crop_max_square(path):
+#     # 長方形から最大サイズの正方形を切り出す
+#     img = Image.open(path)
+#     crop_center(path, min(img.size), min(img.size))
 
 
 def grey_scale(path):
@@ -164,7 +189,19 @@ if __name__ == '__main__':
     path = 'lena.jpg'
     # path1 = '2883.png'
     path2 = '19883_en_1.jpg'
-    flip_mirror('heart_flower.jpg')
+
+    img = Image.open('astronaut_rect.bmp')
+    img_square = crop_max_square(img).resize((200, 200), Image.LANCZOS)
+    img_thumb = mask_circle_transparent(img_square, 4)
+    # 透過画像はpngで保存する
+    img_thumb.save('mask_circle_transparent.png')
+
+    # img = Image.open('astronaut_rect.bmp')
+    # img_square = crop_max_square(img).resize((200, 200), Image.LANCZOS)
+    # img_thumb = mask_circle_solid(img_square, (0, 0, 0), 4)
+    # img_thumb.save('mask_circle_solid.jpg')
+
+    # flip_mirror('heart_flower.jpg')  
     # invert_png('2883.png')
     # crop_max_square(path2)
     # crop_center(path2, 300, 300)
