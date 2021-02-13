@@ -32,7 +32,60 @@ def reduce_color(path):
     img_dec = np.concatenate((img, img_32, img_128), axis=1)
     Image.fromarray(img_dec).save('dec_color_png.jpg')
 
+
+def binarization(path):
+    thresh = 128
+    maxval = 255
+    im_gray = np.array(Image.open(path).convert('L'))
+    im_bin = (im_gray > thresh) * maxval
+    Image.fromarray(np.uint8(im_bin)).save('numpy_binarization.png')
+
+
+def binarization_keep(path):
+    thresh = 128
+    im_gray = np.array(Image.open(path).convert('L'))
+    im_bin = (im_gray > thresh) * im_gray
+    Image.fromarray(np.uint8(im_bin)).save('numpy_binarization_keep.png')
+
+
+def image_binarization(path):
+    thresh = 128
+    im_gray = np.array(Image.open(path).convert('L'))
+    im_bool = im_gray > thresh
+    im_dst = np.empty((*im_gray.shape, 3))
+    r, g, b = 255, 128, 32
+    im_dst[:, :, 0] = im_bool * r
+    im_dst[:, :, 1] = im_bool * g
+    im_dst[:, :, 2] = im_bool * b
+    Image.fromarray(np.uint8(im_dst)).save('binarization_color.png')
+
+    im_dst[:, :, 0] = im_bool * r
+    im_dst[:, :, 1] = ~im_bool * g
+    im_dst[:, :, 2] = im_bool * b
+    Image.fromarray(np.uint8(im_dst)).save('binarization_color2.png')
+
+
+def image_binarization2(path):
+    img = np.array(Image.open(path))
+    img_th = np.empty_like(img)
+    thresh = 128
+    maxval = 255
+
+    for i in range(3):
+        img_th[:, :, i] = (img[:, :, i] > thresh) * maxval
+    Image.fromarray(np.uint8(img_th)).save('binarization_color3.png')
+
+    l_thresh = [64, 128, 192]
+    l_maxval = [64, 128, 192]
+    for i, thresh, maxval in zip(range(3), l_thresh, l_maxval):
+        img_th[:, :, i] = (img[:, :, i] > thresh) * maxval
+    Image.fromarray(np.uint8(img_th)).save('binarization_color4.png')
+    
+
+
+
 if __name__ == '__main__':
-    reduce_color('lena2.png')
+    image_binarization('19615_en_1.jpg')
+    # reduce_color('lena2.png')
     # inverted_negative_image('lena.jpg')
     # one_color_image('lena.jpg')
