@@ -32,7 +32,34 @@ def reduce_color(path):
     img_dec = np.concatenate((img, img_32, img_128), axis=1)
     Image.fromarray(img_dec).save('dec_color_png.jpg')
 
+
+def gamma_correct(path):
+    img = np.array(Image.open(path))
+    im_1_22 = 255.0 * (img / 255.0) ** (1 / 2.2)
+    im_22 = 255.0 * (img / 255.0) ** 2.2
+
+    im_gamma = np.concatenate((im_1_22, img, im_22), axis=1)
+    pil_img = Image.fromarray(np.uint8(im_gamma))
+    pil_img.save('numpy_gamma.jpg')
+
+
+def slice_trimming(path):
+    img = np.array(Image.open(path))
+    print(img.shape)
+    img_trim = img[600:800, 600:800]
+    print(img_trim.shape)
+    Image.fromarray(img_trim).save('numpy_trim.jpg')
+
+
+def trim(path, x, y, width, height):
+    img = np.array(Image.open(path))
+    img_trim = img[y:y + height, x:x + width]
+    Image.fromarray(img_trim).save('numpy_trim2.jpg')  
+
+
+
 if __name__ == '__main__':
-    reduce_color('lena2.png')
+    trim("lena2.png", 128, 192, 256, 128)
+    # gamma_correct('lena2.png')
     # inverted_negative_image('lena.jpg')
     # one_color_image('lena.jpg')
