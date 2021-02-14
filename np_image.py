@@ -55,6 +55,54 @@ def trim(path, x, y, width, height):
     img = np.array(Image.open(path))
     img_trim = img[y:y + height, x:x + width]
     Image.fromarray(img_trim).save('numpy_trim2.jpg')  
+def binarization(path):
+    thresh = 128
+    maxval = 255
+    im_gray = np.array(Image.open(path).convert('L'))
+    im_bin = (im_gray > thresh) * maxval
+    Image.fromarray(np.uint8(im_bin)).save('numpy_binarization.png')
+
+
+def binarization_keep(path):
+    thresh = 128
+    im_gray = np.array(Image.open(path).convert('L'))
+    im_bin = (im_gray > thresh) * im_gray
+    Image.fromarray(np.uint8(im_bin)).save('numpy_binarization_keep.png')
+
+
+def image_binarization(path):
+    thresh = 128
+    im_gray = np.array(Image.open(path).convert('L'))
+    im_bool = im_gray > thresh
+    im_dst = np.empty((*im_gray.shape, 3))
+    r, g, b = 255, 128, 32
+    im_dst[:, :, 0] = im_bool * r
+    im_dst[:, :, 1] = im_bool * g
+    im_dst[:, :, 2] = im_bool * b
+    Image.fromarray(np.uint8(im_dst)).save('binarization_color.png')
+
+    im_dst[:, :, 0] = im_bool * r
+    im_dst[:, :, 1] = ~im_bool * g
+    im_dst[:, :, 2] = im_bool * b
+    Image.fromarray(np.uint8(im_dst)).save('binarization_color2.png')
+
+
+def image_binarization2(path):
+    img = np.array(Image.open(path))
+    img_th = np.empty_like(img)
+    thresh = 128
+    maxval = 255
+
+    for i in range(3):
+        img_th[:, :, i] = (img[:, :, i] > thresh) * maxval
+    Image.fromarray(np.uint8(img_th)).save('binarization_color3.png')
+
+    l_thresh = [64, 128, 192]
+    l_maxval = [64, 128, 192]
+    for i, thresh, maxval in zip(range(3), l_thresh, l_maxval):
+        img_th[:, :, i] = (img[:, :, i] > thresh) * maxval
+    Image.fromarray(np.uint8(img_th)).save('binarization_color4.png')
+    
 
 
 
