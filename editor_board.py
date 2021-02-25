@@ -22,6 +22,7 @@ class CoverImageCanvas(CompositeBoard):
 
     def __init__(self, master):
         super().__init__(master)
+        self.mask_images = {}
         self.create_bind()
 
     def create_bind(self):
@@ -40,6 +41,35 @@ class CoverImageCanvas(CompositeBoard):
         self.img_path = Path(path)
         self.display_img = ImageTk.PhotoImage(img.resize((600, 500)))
         self.create_image(0, 0, image=self.display_img, anchor=tk.NW)
+
+    def get_2d_gradient(self, start, stop, width, height, is_horizontal):
+        if is_horizontal:
+            return np.tile(np.linspace(start, stop, width), (height, 1))
+        else:
+            return np.tile(np.linspace(start, stop, height), (width, 1)).T
+
+    def get_3d_dradient(self, start_tuple, stop_tuple, is_horizontal_tuple,
+            width=600, height=500):
+        array = np.zeros((height, width, len(start_tuple)), dtype=np.float)
+        for i, (start, stop, is_horizontal) in enumerate(zip(start_tuple, stop_tuple, is_horizontal_tuple)):
+            array[:, :, i] = self.get_2d_gradient(start, stop, width, height, is_horizontal)
+        return array
+
+    def create_mask_images(self):
+        params = [
+            [(255, 255, 255), (0, 0, 0), (False, False, False)],
+            [(0, 0, 0), (255, 255, 255), (False, False, False)],
+            [(255, 255, 255), (0, 0, 0), (True, True, True)],
+            [(0, 0, 0), (255, 255, 255), (True, True, True)],
+            [(0, 0, 192), (255, 255, 64), (True, False, False)]
+        ]
+        for i, param in enumerate(params):
+            start, stop, is_horizontal = param
+            array = self.get_3d_dradient(start, stop, is_horizontal)
+            self.mask_images[i] = Image.fromarray((np.uint8(array)))
+
+    def toggle_mask(self):
+        pass
 
     def drop_enter(self, event):
         event.widget.focus_force()

@@ -36,6 +36,9 @@ class Window(ttk.Frame):
         save_button = ttk.Button(controller_frame, text='save', 
             command=self.base_image_canvas.save_image)
         save_button.pack()
+        mask_button = ttk.Button(controller_frame, text='mask', 
+            command=self.cover_image_canvas.toggle_mask)
+        mask_button.pack()
  
     def close(self, event=None):
         self.quit()
