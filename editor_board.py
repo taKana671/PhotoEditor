@@ -12,34 +12,19 @@ from TkinterDnD2 import *
 class CompositeBoard(tk.Canvas):
 
     drag_start = False
+    mask_id = 0
+    mask_images = {}
 
     def __init__(self, master):
         self.img_path = ''
+        self.original_img = None
+        self.mask_images = {}
         super().__init__(master, width=600, height=500, bg='snow')
      
-      
-class CoverImageCanvas(CompositeBoard):
-
-    def __init__(self, master):
-        super().__init__(master)
-        self.mask_images = {}
-        self.create_bind()
-
-    def create_bind(self):
-        self.drop_target_register(DND_FILES)
-        # self.drag_source_register(1, DND_TEXT, DND_FILES)
-        self.drag_source_register(1, '*')
-        self.dnd_bind('<<DropEnter>>', self.drop_enter)
-        self.dnd_bind('<<DropPosition>>', self.drop_position)
-        self.dnd_bind('<<DropLeave>>', self.drop_leave)
-        self.dnd_bind('<<Drop>>', self.drop)
-        self.dnd_bind('<<DragInitCmd>>', self.drag_init)
-        self.dnd_bind('<<DragEndCmd>>', self.drag_end)
-
     def show_image(self, path):
-        img = Image.open(path)
+        self.original_img = Image.open(path)
         self.img_path = Path(path)
-        self.display_img = ImageTk.PhotoImage(img.resize((600, 500)))
+        self.display_img = ImageTk.PhotoImage(self.original_img.resize((600, 500)))
         self.create_image(0, 0, image=self.display_img, anchor=tk.NW)
 
     def get_2d_gradient(self, start, stop, width, height, is_horizontal):
@@ -56,6 +41,7 @@ class CoverImageCanvas(CompositeBoard):
         return array
 
     def create_mask_images(self):
+        yield Image.new("L", (600, 500), 128)
         params = [
             [(255, 255, 255), (0, 0, 0), (False, False, False)],
             [(0, 0, 0), (255, 255, 255), (False, False, False)],
@@ -63,13 +49,40 @@ class CoverImageCanvas(CompositeBoard):
             [(0, 0, 0), (255, 255, 255), (True, True, True)],
             [(0, 0, 192), (255, 255, 64), (True, False, False)]
         ]
-        for i, param in enumerate(params):
+        for param in params:
             start, stop, is_horizontal = param
             array = self.get_3d_dradient(start, stop, is_horizontal)
-            self.mask_images[i] = Image.fromarray((np.uint8(array)))
+            yield Image.fromarray(np.uint8(array)).convert('L')
+
+    def get_mask_images(self):
+        for i, image in enumerate(self.create_mask_images()):
+            CompositeBoard.mask_images[i] = image
+
+
+class CoverImageCanvas(CompositeBoard):
+
+    def __init__(self, master):
+        super().__init__(master)
+        self.create_bind()
+        self.counter = 0
+
+    def create_bind(self):
+        self.drop_target_register(DND_FILES)
+        # self.drag_source_register(1, DND_TEXT, DND_FILES)
+        self.drag_source_register(1, '*')
+        self.dnd_bind('<<DropEnter>>', self.drop_enter)
+        self.dnd_bind('<<DropPosition>>', self.drop_position)
+        self.dnd_bind('<<DropLeave>>', self.drop_leave)
+        self.dnd_bind('<<Drop>>', self.drop)
+        self.dnd_bind('<<DragInitCmd>>', self.drag_init)
+        self.dnd_bind('<<DragEndCmd>>', self.drag_end)
 
     def toggle_mask(self):
-        pass
+        self.counter += 1
+        CompositeBoard.mask_id = self.counter % (len(CompositeBoard.mask_images))
+        mask_image = CompositeBoard.mask_images[CompositeBoard.mask_id]
+        self.display_img = ImageTk.PhotoImage(mask_image)
+        self.create_image(0, 0, image=self.display_img, anchor=tk.NW)
 
     def drop_enter(self, event):
         event.widget.focus_force()
@@ -105,28 +118,21 @@ class BaseImageCanvas(CompositeBoard):
 
     def __init__(self, master):
         super().__init__(master)
-        self.original_img = None
+        self.get_mask_images()
         self.create_bind()
 
     def create_bind(self):
         self.drop_target_register(DND_FILES)
-        # self.drag_source_register(1, DND_TEXT, DND_FILES)
-        # self.drag_source_register(1, '*')
         self.dnd_bind('<<DropEnter>>', self.drop_enter)
         self.dnd_bind('<<DropPosition>>', self.drop_position)
         self.dnd_bind('<<DropLeave>>', self.drop_leave)
         self.dnd_bind('<<Drop>>', self.drop)
-        
-    def show_image(self, path):
-        self.original_img = Image.open(path)
-        self.img_path = Path(path)
-        self.display_img = ImageTk.PhotoImage(self.original_img.resize((600, 500)))
-        self.create_image(0, 0, image=self.display_img, anchor=tk.NW)
-        
+
     def show_composite_image(self, path):
         if self.original_img:
             img = Image.open(path).resize(self.original_img.size)
-            mask = Image.new("L", self.original_img.size, 128)
+            mask = CompositeBoard.mask_images[CompositeBoard.mask_id].resize(
+                self.original_img.size)
             self.original_img = Image.composite(self.original_img, img, mask)
             self.display_img = ImageTk.PhotoImage(self.original_img.resize((600, 500)))
             self.delete('all')
@@ -134,11 +140,9 @@ class BaseImageCanvas(CompositeBoard):
 
     def save_image(self):
         save_path = filedialog.asksaveasfilename(
-            # initialdir=self.img_path
             initialdir=self.img_path.parent,
             title='Save as',
-            filetypes=[('jpg', '*.jpg'), ('png', '*.png')]
-        )
+            filetypes=[('jpg', '*.jpg'), ('png', '*.png')])
         if save_path:
             self.original_img.save(save_path)
         
@@ -156,13 +160,12 @@ class BaseImageCanvas(CompositeBoard):
 
     def drop(self, event):
         print('Dropped:', event.widget)
-        if self.drag_start:
+        if CompositeBoard.drag_start:
             self.show_composite_image(event.data)
             CompositeBoard.drag_start = False
         else:
             self.show_image(event.data)
     
-
     def close(self):
         self.quit()
 

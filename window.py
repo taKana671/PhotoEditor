@@ -33,12 +33,12 @@ class Window(ttk.Frame):
         controller_frame = tk.Frame(base_frame)
         controller_frame.grid(row=1, column=0, columnspan=2, 
             sticky=(tk.W, tk.E, tk.N, tk.S))
-        save_button = ttk.Button(controller_frame, text='save', 
+        save_button = ttk.Button(controller_frame, text='Save image', 
             command=self.base_image_canvas.save_image)
-        save_button.pack()
-        mask_button = ttk.Button(controller_frame, text='mask', 
+        save_button.pack(side=tk.RIGHT, pady=(3, 10), padx=5)
+        mask_button = ttk.Button(controller_frame, text='Change mask', 
             command=self.cover_image_canvas.toggle_mask)
-        mask_button.pack()
+        mask_button.pack(side=tk.RIGHT, pady=(3, 10))
  
     def close(self, event=None):
         self.quit()
@@ -48,6 +48,7 @@ if __name__ == '__main__':
     app = TkinterDnD.Tk()
     # app.geometry('650x500')
     # app.withdraw()
+    app.resizable(False, False)
     app.title('Image Editor')
     window = Window(app)
     app.protocol('WM_DELETE_WINDOW', window.close)
