@@ -10,7 +10,12 @@ class Window(ttk.Frame):
 
     def __init__(self, master):
         super().__init__(master, width=1200, height=500)
+        self.create_variable()
         self.create_ui()
+
+    def create_variable(self):
+        self.width_var = tk.StringVar()
+        self.height_var = tk.StringVar()
 
     def create_ui(self):
         base_frame = tk.Frame(self.master)
@@ -25,7 +30,8 @@ class Window(ttk.Frame):
             pady=5, sticky=(tk.W, tk.E, tk.N, tk.S))
            
     def create_base_image_canvas(self, base_frame):
-        self.base_image_canvas = BaseImageCanvas(base_frame)
+        self.base_image_canvas = BaseImageCanvas(
+            base_frame, self.width_var, self.height_var)
         self.base_image_canvas.grid(row=0, column=1, padx=(1, 5),
             pady=5, sticky=(tk.W, tk.E, tk.N, tk.S))
 
@@ -33,6 +39,16 @@ class Window(ttk.Frame):
         controller_frame = tk.Frame(base_frame)
         controller_frame.grid(row=1, column=0, columnspan=2, 
             sticky=(tk.W, tk.E, tk.N, tk.S))
+
+        height_entry = ttk.Entry(controller_frame, width=10, textvariable=self.height_var)
+        height_entry.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 5))
+        height_label = ttk.Label(controller_frame, text='Height:')
+        height_label.pack(side=tk.RIGHT, pady=(3, 10), padx=(5, 1))
+        width_entry = ttk.Entry(controller_frame, width=10, textvariable=self.width_var)
+        width_entry.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 5))
+        width_label = ttk.Label(controller_frame, text='Width:')
+        width_label.pack(side=tk.RIGHT, pady=(3, 10), padx=(5, 1))
+
         save_button = ttk.Button(controller_frame, text='Save image', 
             command=self.base_image_canvas.save_image)
         save_button.pack(side=tk.RIGHT, pady=(3, 10), padx=5)

@@ -16,7 +16,7 @@ class CompositeBoard(tk.Canvas):
     mask_images = {}
 
     def __init__(self, master):
-        self.img_path = ''
+        self.img_path = None
         self.original_img = None
         self.mask_images = {}
         super().__init__(master, width=600, height=500, bg='snow')
@@ -116,8 +116,10 @@ class CoverImageCanvas(CompositeBoard):
 
 class BaseImageCanvas(CompositeBoard):
 
-    def __init__(self, master):
+    def __init__(self, master, width_var, height_var):
         super().__init__(master)
+        self.width_var = width_var
+        self.height_var = height_var
         self.get_mask_images()
         self.create_bind()
 
@@ -139,12 +141,19 @@ class BaseImageCanvas(CompositeBoard):
             self.create_image(0, 0, image=self.display_img, anchor=tk.NW)
 
     def save_image(self):
-        save_path = filedialog.asksaveasfilename(
-            initialdir=self.img_path.parent,
-            title='Save as',
-            filetypes=[('jpg', '*.jpg'), ('png', '*.png')])
-        if save_path:
-            self.original_img.save(save_path)
+        if self.img_path:
+            save_path = filedialog.asksaveasfilename(
+                initialdir=self.img_path.parent,
+                title='Save as',
+                filetypes=[('jpg', '*.jpg'), ('png', '*.png')])
+            if save_path:
+                alter_size = (int(self.width_var.get()), int(self.height_var.get()))
+                print(self.original_img.size)
+                print(alter_size)
+                if self.original_img.size != alter_size:
+                    self.original_img.resize(alter_size).save(save_path)
+                else:
+                    self.original_img.save(save_path)
         
     def drop_enter(self, event):
         event.widget.focus_force()
@@ -165,6 +174,9 @@ class BaseImageCanvas(CompositeBoard):
             CompositeBoard.drag_start = False
         else:
             self.show_image(event.data)
+            width, height = self.original_img.size
+            self.width_var.set(width)
+            self.height_var.set(height)
     
     def close(self):
         self.quit()
