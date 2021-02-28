@@ -148,8 +148,6 @@ class BaseImageCanvas(CompositeBoard):
                 filetypes=[('jpg', '*.jpg'), ('png', '*.png')])
             if save_path:
                 alter_size = (int(self.width_var.get()), int(self.height_var.get()))
-                print(self.original_img.size)
-                print(alter_size)
                 if self.original_img.size != alter_size:
                     self.original_img.resize(alter_size).save(save_path)
                 else:
