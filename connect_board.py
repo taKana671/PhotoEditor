@@ -1,10 +1,10 @@
-import numpy as np
 import tkinter as tk
 import tkinter.ttk as ttk
-from tkinter import messagebox
-from PIL import Image, ImageTk
 from pathlib import Path
+from PIL import Image, ImageTk
+from tkinter import messagebox
 
+import numpy as np
 from TkinterDnD2 import *
 
 from base_board import BaseBoard, InvalidSizeError
@@ -160,10 +160,10 @@ class ConnectedImageCanvas(ConnectBoard):
             row = int(self.row_var.get())
             if not col or not row:
                 raise InvalidSizeError('Value of column or row is invalid.')
-            img = self.original_img.resize((self.original_img.width//col, self.original_img.height//row))
+            img = self.current_img.resize((self.current_img.width//col, self.current_img.height//row))
             base_h = self.concat_horizontally_repeat(img, col)
-            self.original_img = self.concat_vertically_repeat(base_h, row)
-            self.display_img = ImageTk.PhotoImage(self.original_img.resize((600, 500)))
+            self.current_img = self.concat_vertically_repeat(base_h, row)
+            self.display_img = ImageTk.PhotoImage(self.current_img.resize((600, 500)))
             self.delete('all')
             self.create_image(0, 0, image=self.display_img, anchor=tk.NW)
         except Exception as e:
@@ -185,7 +185,7 @@ class ConnectedImageCanvas(ConnectBoard):
         print('Dropped:', event.widget)
         if BaseBoard.drag_start:
             self.show_image(event.data)
-            width, height = self.original_img.size
+            width, height = self.current_img.size
             self.width_var.set(width)
             self.height_var.set(height)
             BaseBoard.drag_start = False

@@ -1,9 +1,9 @@
-import numpy as np
 import tkinter as tk
 import tkinter.ttk as ttk
 from pathlib import Path
 from PIL import Image, ImageTk
 
+import numpy as np
 from TkinterDnD2 import *
 
 from base_board import BaseBoard
@@ -168,12 +168,12 @@ class BaseImageCanvas(CompositeBoard):
         self.dnd_bind('<<Drop>>', self.drop)
 
     def show_composite_image(self, path):
-        if self.original_img:
-            img = Image.open(path).resize(self.original_img.size)
+        if self.current_img:
+            img = Image.open(path).resize(self.current_img.size)
             mask = CompositeBoard.mask_images[CompositeBoard.mask_id].resize(
-                self.original_img.size)
-            self.original_img = Image.composite(self.original_img, img, mask)
-            self.display_img = ImageTk.PhotoImage(self.original_img.resize((600, 500)))
+                self.current_img.size)
+            self.current_img = Image.composite(self.current_img, img, mask)
+            self.display_img = ImageTk.PhotoImage(self.current_img.resize((600, 500)))
             self.delete('all')
             self.create_image(0, 0, image=self.display_img, anchor=tk.NW)
 
@@ -196,7 +196,7 @@ class BaseImageCanvas(CompositeBoard):
             BaseBoard.drag_start = False
         else:
             self.show_image(event.data)
-            width, height = self.original_img.size
+            width, height = self.current_img.size
             self.width_var.set(width)
             self.height_var.set(height)
     
