@@ -1,12 +1,13 @@
 import numpy as np
 import tkinter as tk
 import tkinter.ttk as ttk
+from tkinter import messagebox
 from PIL import Image, ImageTk
 from pathlib import Path
 
 from TkinterDnD2 import *
 
-from base_board import BaseBoard
+from base_board import BaseBoard, InvalidSizeError
 
 
 class EditorBoard(ttk.Frame):
@@ -19,6 +20,8 @@ class EditorBoard(ttk.Frame):
     def create_variables(self):
         self.width_var = tk.StringVar()
         self.height_var = tk.StringVar()
+        self.col_var = tk.StringVar()
+        self.row_var = tk.StringVar()
 
     def create_ui(self):
         base_frame = tk.Frame(self.master)
@@ -34,7 +37,7 @@ class EditorBoard(ttk.Frame):
            
     def create_connected_image_canvas(self, base_frame):
         self.connected_image_canvas = ConnectedImageCanvas(
-            base_frame, self.width_var, self.height_var)
+            base_frame, self.width_var, self.height_var, self.col_var, self.row_var)
         self.connected_image_canvas.grid(row=0, column=1, padx=(1, 5),
             pady=5, sticky=(tk.W, tk.E, tk.N, tk.S))
 
@@ -42,23 +45,44 @@ class EditorBoard(ttk.Frame):
         controller_frame = tk.Frame(base_frame)
         controller_frame.grid(row=1, column=0, columnspan=2, 
             sticky=(tk.W, tk.E, tk.N, tk.S))
+        # save image
         height_entry = ttk.Entry(controller_frame, width=10, textvariable=self.height_var)
         height_entry.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 5))
         height_label = ttk.Label(controller_frame, text='Height:')
-        height_label.pack(side=tk.RIGHT, pady=(3, 10), padx=(5, 1))
+        height_label.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 1))
         width_entry = ttk.Entry(controller_frame, width=10, textvariable=self.width_var)
-        width_entry.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 5))
+        width_entry.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 1))
         width_label = ttk.Label(controller_frame, text='Width:')
-        width_label.pack(side=tk.RIGHT, pady=(3, 10), padx=(5, 1))
-        save_button = ttk.Button(controller_frame, text='Save image', 
+        width_label.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 1))
+        save_button = ttk.Button(controller_frame, text='Save', 
             command=self.connected_image_canvas.save_image)
-        save_button.pack(side=tk.RIGHT, pady=(3, 10), padx=5)
-        concat_repeat_button = ttk.Button(controller_frame, text='Concat repeatedly', 
+        save_button.pack(side=tk.RIGHT, pady=(3, 10), padx=(5, 1))
+        # repeat the same image
+        height_entry = ttk.Entry(
+            controller_frame, width=5, textvariable=self.row_var)
+        height_entry.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 5))
+        height_label = ttk.Label(controller_frame, text='x')
+        height_label.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 1))
+        width_entry = ttk.Entry(
+            controller_frame, width=5, textvariable=self.col_var)
+        width_entry.pack(side=tk.RIGHT, pady=(3, 10), padx=(5, 1))
+        concat_repeat_button = ttk.Button(controller_frame, text='Repeat', 
             command=self.connected_image_canvas.show_concat_repeat_image)
         concat_repeat_button.pack(side=tk.RIGHT, pady=(3, 10))
+        self.row_var.set(3)
+        self.col_var.set(4)
 
 
-class OriginalImageCanvas(BaseBoard):
+class ConnectBoard(BaseBoard):
+
+    def __init__(self, master, width_var=None, height_var=None,
+            col_var=None, row_var=None):
+        self.col_var = col_var
+        self.row_var = row_var
+        super().__init__(master, width_var, height_var)
+
+
+class OriginalImageCanvas(ConnectBoard):
 
     def __init__(self, master):
         super().__init__(master)
@@ -105,10 +129,10 @@ class OriginalImageCanvas(BaseBoard):
         self.quit()
 
 
-class ConnectedImageCanvas(BaseBoard):
+class ConnectedImageCanvas(ConnectBoard):
 
-    def __init__(self, master, width_var, height_var):
-        super().__init__(master, width_var, height_var)
+    def __init__(self, master, width_var, height_var, col_var, row_var):
+        super().__init__(master, width_var, height_var, col_var, row_var)
         self.create_bind()
 
     def create_bind(self):
@@ -131,14 +155,19 @@ class ConnectedImageCanvas(BaseBoard):
         return base
     
     def show_concat_repeat_image(self):
-        col = 4
-        row = 3
-        img = self.original_img.resize((self.original_img.width//col, self.original_img.height//row))
-        base_h = self.concat_horizontally_repeat(img, col)
-        self.original_img = self.concat_vertically_repeat(base_h, row)
-        self.display_img = ImageTk.PhotoImage(self.original_img.resize((600, 500)))
-        self.delete('all')
-        self.create_image(0, 0, image=self.display_img, anchor=tk.NW)
+        try:
+            col = int(self.col_var.get())
+            row = int(self.row_var.get())
+            if not col or not row:
+                raise InvalidSizeError('Value of column or row is invalid.')
+            img = self.original_img.resize((self.original_img.width//col, self.original_img.height//row))
+            base_h = self.concat_horizontally_repeat(img, col)
+            self.original_img = self.concat_vertically_repeat(base_h, row)
+            self.display_img = ImageTk.PhotoImage(self.original_img.resize((600, 500)))
+            self.delete('all')
+            self.create_image(0, 0, image=self.display_img, anchor=tk.NW)
+        except Exception as e:
+            messagebox.showerror('Error', e)
  
     def drop_enter(self, event):
         event.widget.focus_force()

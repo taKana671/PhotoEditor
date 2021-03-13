@@ -58,7 +58,16 @@ class EditorBoard(ttk.Frame):
         mask_button.pack(side=tk.RIGHT, pady=(3, 10))
 
 
-class CoverImageCanvas(BaseBoard):
+class CompositeBoard(BaseBoard):
+
+    mask_id = 0
+    mask_images = {}
+
+    def __init__(self, master, width_var=None, height_var=None):
+        super().__init__(master, width_var, height_var)
+
+
+class CoverImageCanvas(CompositeBoard):
 
     def __init__(self, master):
         super().__init__(master)
@@ -106,12 +115,12 @@ class CoverImageCanvas(BaseBoard):
 
     def get_mask_images(self):
         for i, image in enumerate(self.create_mask_images()):
-            BaseBoard.mask_images[i] = image
+            CompositeBoard.mask_images[i] = image
 
     def toggle_mask(self):
         self.counter += 1
-        BaseBoard.mask_id = self.counter % (len(BaseBoard.mask_images))
-        mask_image = BaseBoard.mask_images[BaseBoard.mask_id]
+        CompositeBoard.mask_id = self.counter % (len(CompositeBoard.mask_images))
+        mask_image = CompositeBoard.mask_images[CompositeBoard.mask_id]
         self.display_img = ImageTk.PhotoImage(mask_image)
         self.create_image(0, 0, image=self.display_img, anchor=tk.NW)
 
@@ -145,7 +154,7 @@ class CoverImageCanvas(BaseBoard):
         self.quit()
 
 
-class BaseImageCanvas(BaseBoard):
+class BaseImageCanvas(CompositeBoard):
 
     def __init__(self, master, width_var, height_var):
         super().__init__(master, width_var, height_var)
@@ -161,7 +170,7 @@ class BaseImageCanvas(BaseBoard):
     def show_composite_image(self, path):
         if self.original_img:
             img = Image.open(path).resize(self.original_img.size)
-            mask = BaseBoard.mask_images[BaseBoard.mask_id].resize(
+            mask = CompositeBoard.mask_images[CompositeBoard.mask_id].resize(
                 self.original_img.size)
             self.original_img = Image.composite(self.original_img, img, mask)
             self.display_img = ImageTk.PhotoImage(self.original_img.resize((600, 500)))

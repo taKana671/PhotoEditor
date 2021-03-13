@@ -13,9 +13,7 @@ class InvalidSizeError(Exception):
 class BaseBoard(tk.Canvas):
 
     drag_start = False
-    mask_id = 0
-    mask_images = {}
-
+   
     def __init__(self, master, width_var=None, height_var=None):
         self.img_path = None
         self.original_img = None
