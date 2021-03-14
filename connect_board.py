@@ -22,6 +22,7 @@ class EditorBoard(ttk.Frame):
         self.height_var = tk.StringVar()
         self.col_var = tk.StringVar()
         self.row_var = tk.StringVar()
+        self.radio_bool = tk.BooleanVar()
 
     def create_ui(self):
         base_frame = tk.Frame(self.master)
@@ -36,8 +37,8 @@ class EditorBoard(ttk.Frame):
             pady=5, sticky=(tk.W, tk.E, tk.N, tk.S))
            
     def create_connected_image_canvas(self, base_frame):
-        self.connected_image_canvas = ConnectedImageCanvas(
-            base_frame, self.width_var, self.height_var, self.col_var, self.row_var)
+        self.connected_image_canvas = ConnectedImageCanvas(base_frame, self.width_var,
+            self.height_var, self.col_var, self.row_var, self.radio_bool)
         self.connected_image_canvas.grid(row=0, column=1, padx=(1, 5),
             pady=5, sticky=(tk.W, tk.E, tk.N, tk.S))
 
@@ -48,19 +49,19 @@ class EditorBoard(ttk.Frame):
         # save image
         height_entry = ttk.Entry(controller_frame, width=10, textvariable=self.height_var)
         height_entry.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 5))
-        height_label = ttk.Label(controller_frame, text='Height:')
+        height_label = ttk.Label(controller_frame, text='H:')
         height_label.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 1))
         width_entry = ttk.Entry(controller_frame, width=10, textvariable=self.width_var)
         width_entry.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 1))
-        width_label = ttk.Label(controller_frame, text='Width:')
+        width_label = ttk.Label(controller_frame, text='W:')
         width_label.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 1))
         save_button = ttk.Button(controller_frame, text='Save', 
             command=self.connected_image_canvas.save_image)
-        save_button.pack(side=tk.RIGHT, pady=(3, 10), padx=(5, 1))
+        save_button.pack(side=tk.RIGHT, pady=(3, 10), padx=(10, 1))
         # repeat the same image
         height_entry = ttk.Entry(
             controller_frame, width=5, textvariable=self.row_var)
-        height_entry.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 5))
+        height_entry.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 10))
         height_label = ttk.Label(controller_frame, text='x')
         height_label.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 1))
         width_entry = ttk.Entry(
@@ -71,14 +72,33 @@ class EditorBoard(ttk.Frame):
         concat_repeat_button.pack(side=tk.RIGHT, pady=(3, 10))
         self.row_var.set(3)
         self.col_var.set(4)
+        # connect image
+        vertical_radio = ttk.Radiobutton(
+            controller_frame, text='Vertical', value=False, variable=self.radio_bool)
+        vertical_radio.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 10))
+        horizontal_radio = ttk.Radiobutton(
+            controller_frame, text='Horizontal', value=True, variable=self.radio_bool)
+        horizontal_radio.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 1))
+        reset_button = ttk.Button(controller_frame, text='Reset', 
+            command=self.connected_image_canvas.reset_image)
+        reset_button.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 1))
+        concat_button = ttk.Button(controller_frame, text='Connect', 
+            command=self.connected_image_canvas.show_concat_image)
+        concat_button.pack(side=tk.RIGHT, pady=(3, 10))
+        self.radio_bool.set(True)
+        # change original images
+        change_button = ttk.Button(controller_frame, text='Change', 
+            command=self.original_image_canvas.change_images)
+        change_button.pack(side=tk.LEFT, pady=(3, 10), padx=(5, 1))
+        # clear original images
+        clear_button = ttk.Button(controller_frame, text='Clear', 
+            command=self.original_image_canvas.clear_images)
+        clear_button.pack(side=tk.LEFT, pady=(3, 10), padx=1)
 
 
 class ConnectBoard(BaseBoard):
 
-    def __init__(self, master, width_var=None, height_var=None,
-            col_var=None, row_var=None):
-        self.col_var = col_var
-        self.row_var = row_var
+    def __init__(self, master, width_var=None, height_var=None):
         super().__init__(master, width_var, height_var)
 
 
@@ -86,6 +106,7 @@ class OriginalImageCanvas(ConnectBoard):
 
     def __init__(self, master):
         super().__init__(master)
+        self.path_list = [] 
         self.create_bind()
        
     def create_bind(self):
@@ -98,6 +119,22 @@ class OriginalImageCanvas(ConnectBoard):
         self.dnd_bind('<<Drop>>', self.drop)
         self.dnd_bind('<<DragInitCmd>>', self.drag_init)
         self.dnd_bind('<<DragEndCmd>>', self.drag_end)
+
+    def change_images(self):
+        if len(self.path_list):
+            index = self.path_list.index(self.img_path.as_posix())
+            if index == len(self.path_list) - 1:
+                index = 0
+            else:
+                index += 1
+            self.show_image(self.path_list[index])
+
+    def clear_images(self):
+        self.delete('all')
+        self.path_list = []
+        self.img_path = None
+        self.last_img = None
+        self.current_img = None
 
     def drop_enter(self, event):
         event.widget.focus_force()
@@ -113,6 +150,8 @@ class OriginalImageCanvas(ConnectBoard):
 
     def drop(self, event):
         print(f'Drop: {event.widget}')
+        if event.data not in self.path_list:
+            self.path_list.append(event.data)
         self.show_image(event.data)
         BaseBoard.drag_start = False
        
@@ -131,9 +170,13 @@ class OriginalImageCanvas(ConnectBoard):
 
 class ConnectedImageCanvas(ConnectBoard):
 
-    def __init__(self, master, width_var, height_var, col_var, row_var):
-        super().__init__(master, width_var, height_var, col_var, row_var)
+    def __init__(self, master, width_var, height_var, col_var, row_var, radio_bool):
+        super().__init__(master, width_var, height_var)
+        self.col_var = col_var
+        self.row_var = row_var
+        self.radio_bool = radio_bool
         self.create_bind()
+        self.concat_imgs = []
 
     def create_bind(self):
         self.drop_target_register(DND_FILES)
@@ -141,7 +184,18 @@ class ConnectedImageCanvas(ConnectBoard):
         self.dnd_bind('<<DropPosition>>', self.drop_position)
         self.dnd_bind('<<DropLeave>>', self.drop_leave)
         self.dnd_bind('<<Drop>>', self.drop)
- 
+
+    def display_image_size(self):
+        width, height = self.current_img.size
+        self.width_var.set(width)
+        self.height_var.set(height)
+
+    def reset_image(self):
+        self.delete('all')
+        self.concat_imgs = []
+        self.img_path = None
+        self.current_img = None
+
     def concat_horizontally_repeat(self, img, col):
         base = Image.new('RGB', (img.width * col, img.height))
         for x in range(col):
@@ -166,9 +220,45 @@ class ConnectedImageCanvas(ConnectBoard):
             self.display_img = ImageTk.PhotoImage(self.current_img.resize((600, 500)))
             self.delete('all')
             self.create_image(0, 0, image=self.display_img, anchor=tk.NW)
+            self.display_image_size()
         except Exception as e:
             messagebox.showerror('Error', e)
- 
+    
+    def concat_vertically(self, resample=Image.BICUBIC):
+        min_width = min(img.width for img in self.concat_imgs)
+        resized_imgs = [img.resize(
+            (min_width, int(img.height * min_width / img.width)), resample=resample) for img in self.concat_imgs]
+        total_height = sum(img.height for img in resized_imgs)
+        base = Image.new('RGB', (min_width, total_height))
+        pos_y = 0
+        for img in resized_imgs:
+            base.paste(img, (0, pos_y))
+            pos_y += img.height
+        return base
+    
+    def concat_horizontally(self, resample=Image.BICUBIC):
+        min_height = min(img.height for img in self.concat_imgs)
+        resized_imgs = [img.resize(
+            (int(img.width * min_height / img.height), min_height), resample=resample) for img in self.concat_imgs]
+        total_width = sum(img.width for img in resized_imgs)
+        base = Image.new('RGB', (total_width, min_height))
+        pos_x = 0
+        for img in resized_imgs:
+            base.paste(img, (pos_x, 0))
+            pos_x += img.width
+        return base
+
+    def show_concat_image(self):
+        if self.concat_imgs:
+            if self.radio_bool.get():
+                self.current_img = self.concat_horizontally()
+            else:
+                self.current_img = self.concat_vertically()
+            self.display_img = ImageTk.PhotoImage(self.current_img.resize((600, 500)))
+            self.delete('all')
+            self.create_image(0, 0, image=self.display_img, anchor=tk.NW)
+            self.display_image_size() 
+        
     def drop_enter(self, event):
         event.widget.focus_force()
         print(f'Drop_enter: {event.widget}')
@@ -185,20 +275,10 @@ class ConnectedImageCanvas(ConnectBoard):
         print('Dropped:', event.widget)
         if BaseBoard.drag_start:
             self.show_image(event.data)
-            width, height = self.current_img.size
-            self.width_var.set(width)
-            self.height_var.set(height)
+            self.display_image_size()
+            self.concat_imgs.append(self.current_img)
             BaseBoard.drag_start = False
       
     def close(self):
         self.quit()
-
-if __name__ == '__main__':
-    app = TkinterDnD.Tk()
-    # app.geometry('650x500')
-    # app.withdraw()
-    app.title('Image Editor')
-    window = EditorBoard(app)
-    app.protocol('WM_DELETE_WINDOW', window.close)
-    app.mainloop()
 

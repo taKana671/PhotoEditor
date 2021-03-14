@@ -5,8 +5,8 @@ from tkinter import filedialog
 
 from TkinterDnD2 import *
 
-from composite_board import EditorBoard
-# from connect_board import EditorBoard
+# from composite_board import EditorBoard
+from connect_board import EditorBoard
 
 
 class Window(ttk.Frame):

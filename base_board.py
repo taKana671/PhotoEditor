@@ -37,9 +37,11 @@ class BaseBoard(tk.Canvas):
                     width = int(self.width_var.get())
                     height = int(self.height_var.get())
                     if not width or not height:
-                        raise InvalidSizeError('Value of Width or Height is invalid.') 
+                        raise InvalidSizeError('Value of Width or Height is invalid.')
                     if self.current_img.size != (width, height):
-                        self.current_img.resize((width, height)).save(save_path)
+                        save_img = self.current_img.copy()
+                        save_img.thumbnail((width, height), Image.BICUBIC)
+                        save_img.save(save_path)
                     else:
                         self.current_img.save(save_path)
                 except Exception as e:
