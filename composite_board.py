@@ -44,11 +44,11 @@ class EditorBoard(ttk.Frame):
             sticky=(tk.W, tk.E, tk.N, tk.S))
         height_entry = ttk.Entry(controller_frame, width=10, textvariable=self.height_var)
         height_entry.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 5))
-        height_label = ttk.Label(controller_frame, text='Height:')
+        height_label = ttk.Label(controller_frame, text='H:')
         height_label.pack(side=tk.RIGHT, pady=(3, 10), padx=(5, 1))
         width_entry = ttk.Entry(controller_frame, width=10, textvariable=self.width_var)
         width_entry.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 5))
-        width_label = ttk.Label(controller_frame, text='Width:')
+        width_label = ttk.Label(controller_frame, text='W:')
         width_label.pack(side=tk.RIGHT, pady=(3, 10), padx=(5, 1))
         save_button = ttk.Button(controller_frame, text='Save image', 
             command=self.base_image_canvas.save_image)
