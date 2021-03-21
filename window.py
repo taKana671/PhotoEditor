@@ -7,9 +7,11 @@ from TkinterDnD2 import *
 
 import composite_board
 import connect_board
+import convert_board
 
 CONNECT = 'Connect'
 COMPOSITE = 'Composite'
+CONVERT = 'Convert'
 
 
 class Window(ttk.Frame):
@@ -26,8 +28,8 @@ class Window(ttk.Frame):
     def create_board(self):
         base_frame = ttk.Frame(self.master)
         base_frame.pack(fill=tk.BOTH, expand=True)
-        for name, module in zip((CONNECT, COMPOSITE),
-                (connect_board, composite_board)):
+        for name, module in zip((CONNECT, COMPOSITE, CONVERT),
+                (connect_board, composite_board, convert_board)):
             frame = ttk.Frame(base_frame)
             frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
             board = module.EditorBoard(frame)
@@ -42,11 +44,14 @@ class Window(ttk.Frame):
         self.menubar = tk.Menu(self.master)
         self.master.config(menu=self.menubar)
         menu = tk.Menu(self.menubar, tearoff=0, name='game')
-        menu.add_command(label='Connect', 
+        menu.add_command(label=CONNECT, 
                          command=lambda: self.change_boards(CONNECT),
                          compound=tk.LEFT)
-        menu.add_command(label='Composite', 
+        menu.add_command(label=COMPOSITE, 
                          command=lambda: self.change_boards(COMPOSITE),
+                         compound=tk.LEFT)
+        menu.add_command(label=CONVERT, 
+                         command=lambda: self.change_boards(CONVERT),
                          compound=tk.LEFT)
         self.menubar.add_cascade(label="Menu", menu=menu)
 

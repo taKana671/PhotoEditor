@@ -196,10 +196,7 @@ class BaseImageCanvas(CompositeBoard):
             BaseBoard.drag_start = False
         else:
             self.show_image(event.data)
-            width, height = self.current_img.size
-            self.width_var.set(width)
-            self.height_var.set(height)
-    
+            self.display_image_size(*self.current_img.size)
     def close(self):
         self.quit()
 

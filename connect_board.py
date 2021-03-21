@@ -185,11 +185,6 @@ class ConnectedImageCanvas(ConnectBoard):
         self.dnd_bind('<<DropLeave>>', self.drop_leave)
         self.dnd_bind('<<Drop>>', self.drop)
 
-    def display_image_size(self):
-        width, height = self.current_img.size
-        self.width_var.set(width)
-        self.height_var.set(height)
-
     def reset_image(self):
         self.delete('all')
         self.concat_imgs = []
@@ -220,7 +215,7 @@ class ConnectedImageCanvas(ConnectBoard):
             self.display_img = ImageTk.PhotoImage(self.current_img.resize((600, 500)))
             self.delete('all')
             self.create_image(0, 0, image=self.display_img, anchor=tk.NW)
-            self.display_image_size()
+            self.display_image_size(*self.current_img.size)
         except Exception as e:
             messagebox.showerror('Error', e)
     
@@ -257,7 +252,7 @@ class ConnectedImageCanvas(ConnectBoard):
             self.display_img = ImageTk.PhotoImage(self.current_img.resize((600, 500)))
             self.delete('all')
             self.create_image(0, 0, image=self.display_img, anchor=tk.NW)
-            self.display_image_size() 
+            self.display_image_size(*self.current_img.size) 
         
     def drop_enter(self, event):
         event.widget.focus_force()
@@ -275,7 +270,7 @@ class ConnectedImageCanvas(ConnectBoard):
         print('Dropped:', event.widget)
         if BaseBoard.drag_start:
             self.show_image(event.data)
-            self.display_image_size()
+            self.display_image_size(*self.current_img.size)
             self.concat_imgs.append(self.current_img)
             BaseBoard.drag_start = False
       

@@ -19,6 +19,10 @@ class BaseBoard(tk.Canvas):
         self.width_var = width_var
         self.height_var = height_var
         super().__init__(master, width=600, height=500, bg='snow')
+
+    def display_image_size(self, width, height):
+        self.width_var.set(width)
+        self.height_var.set(height)
      
     def show_image(self, path):
         self.current_img = Image.open(path)
