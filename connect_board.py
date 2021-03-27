@@ -56,7 +56,7 @@ class EditorBoard(ttk.Frame):
         width_label = ttk.Label(controller_frame, text='W:')
         width_label.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 1))
         save_button = ttk.Button(controller_frame, text='Save', 
-            command=self.connected_image_canvas.save_image)
+            command=self.connected_image_canvas.save_with_pil)
         save_button.pack(side=tk.RIGHT, pady=(3, 10), padx=(10, 1))
         # repeat the same image
         height_entry = ttk.Entry(

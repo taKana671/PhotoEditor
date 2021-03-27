@@ -51,7 +51,7 @@ class EditorBoard(ttk.Frame):
         width_label = ttk.Label(controller_frame, text='W:')
         width_label.pack(side=tk.RIGHT, pady=(3, 10), padx=(5, 1))
         save_button = ttk.Button(controller_frame, text='Save image', 
-            command=self.base_image_canvas.save_image)
+            command=self.base_image_canvas.save_with_pil)
         save_button.pack(side=tk.RIGHT, pady=(3, 10), padx=5)
         mask_button = ttk.Button(controller_frame, text='Change mask', 
             command=self.cover_image_canvas.toggle_mask)
