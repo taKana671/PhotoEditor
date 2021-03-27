@@ -76,6 +76,12 @@ class EditorBoard(ttk.Frame):
         sepia_button = ttk.Button(controller_frame, text='Sepia', 
             command=self.convert_image_canvas.show_sepia_image)
         sepia_button.pack(side=tk.RIGHT, pady=(3, 10), padx=(10, 1))
+        anime_button = ttk.Button(controller_frame, text='Anime', 
+            command=self.convert_image_canvas.show_image_like_animation)
+        anime_button.pack(side=tk.RIGHT, pady=(3, 10), padx=(10, 1))
+        anime_button = ttk.Button(controller_frame, text='Pixel', 
+            command=self.convert_image_canvas.show_pixel_art)
+        anime_button.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 1))
 
 
 class ConvertBoard(BaseBoard):
@@ -205,6 +211,43 @@ class ConvertImageCanvas(ConvertBoard):
             img_hsv[:, :, 2] = gray
             self.current_img = cv2.cvtColor(img_hsv, cv2.COLOR_HSV2BGR)
             img_rgb = cv2.cvtColor(img_hsv, cv2.COLOR_HSV2RGB)
+            img_pil = Image.fromarray(img_rgb)
+            self.display_img = ImageTk.PhotoImage(img_pil.resize((600, 500)))
+            self.delete('all')
+            self.create_image(0, 0, image=self.display_img, anchor=tk.NW)
+
+    def show_image_like_animation(self, k=30):
+        if self.img_path:
+            img = cv2.imread(self.img_path.as_posix())
+            gray = cv2.cvtColor(img, cv2.COLOR_BGRA2GRAY)
+            edge = cv2.blur(gray, (3, 3))
+            edge = cv2.Canny(edge, 50, 150, apertureSize=3)
+            edge = cv2.cvtColor(edge, cv2.COLOR_GRAY2BGR)
+            img = cv2.pyrMeanShiftFiltering(img, 5, 20)
+            self.current_img = cv2.subtract(img, edge)
+            img_rgb = cv2.cvtColor(self.current_img, cv2.COLOR_BGR2RGB)
+            img_pil = Image.fromarray(img_rgb)
+            self.display_img = ImageTk.PhotoImage(img_pil.resize((600, 500)))
+            self.delete('all')
+            self.create_image(0, 0, image=self.display_img, anchor=tk.NW)
+
+    def sub_color(self, img, k):
+        z = img.reshape((-1, 3))
+        z = np.float32(z)
+        criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 10, 1.0)
+        ret, label, center = cv2.kmeans(z, k, None, criteria, 10, cv2.KMEANS_RANDOM_CENTERS)
+        center = np.uint8(center)
+        res = center[label.flatten()]
+        return res.reshape((img.shape))
+
+    def show_pixel_art(self, alpha=2, k=4):
+        if self.img_path:
+            img = cv2.imread(self.img_path.as_posix())
+            h, w, ch = img.shape
+            img = cv2.resize(img, (int(w*alpha), int(h*alpha)))
+            img = cv2.resize(img, (w, h), interpolation=cv2.INTER_NEAREST)
+            self.current_img = self.sub_color(img, k)
+            img_rgb = cv2.cvtColor(self.current_img, cv2.COLOR_BGR2RGB)
             img_pil = Image.fromarray(img_rgb)
             self.display_img = ImageTk.PhotoImage(img_pil.resize((600, 500)))
             self.delete('all')

@@ -44,7 +44,7 @@ class Window(ttk.Frame):
         self.menubar = tk.Menu(self.master)
         self.master.config(menu=self.menubar)
         menu = tk.Menu(self.menubar, tearoff=0, name='game')
-        menu.add_command(label=CONNECT, 
+        menu.add_command(label=CONNECT,
                          command=lambda: self.change_boards(CONNECT),
                          compound=tk.LEFT)
         menu.add_command(label=COMPOSITE, 
