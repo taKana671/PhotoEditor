@@ -1,8 +1,10 @@
 import tkinter as tk
 import tkinter.ttk as ttk
 from pathlib import Path
-from PIL import Image, ImageTk
 from tkinter import filedialog, messagebox
+
+import cv2
+from PIL import Image, ImageTk
 
 
 class InvalidSizeError(Exception):
@@ -30,25 +32,47 @@ class BaseBoard(tk.Canvas):
         self.display_img = ImageTk.PhotoImage(self.current_img.resize((600, 500)))
         self.create_image(0, 0, image=self.display_img, anchor=tk.NW)
 
-    def save_image(self):
-        if self.img_path:
-            save_path = filedialog.asksaveasfilename(
-                initialdir=self.img_path.parent,
-                title='Save as',
-                filetypes=[('jpg', '*.jpg'), ('png', '*.png')])
-            if save_path:
-                try:
-                    width = int(self.width_var.get())
-                    height = int(self.height_var.get())
-                    if not width or not height:
-                        raise InvalidSizeError('Value of Width or Height is invalid.')
-                    if self.current_img.size != (width, height):
-                        save_img = self.current_img.copy()
-                        save_img.thumbnail((width, height), Image.BICUBIC)
-                        save_img.save(save_path)
+    def save_image(save_func):
+        def save_decorator(self):
+            if self.img_path:
+                save_path = filedialog.asksaveasfilename(
+                    initialdir=self.img_path.parent,
+                    title='Save as',
+                    filetypes=[('jpg', '*.jpg'), ('png', '*.png')])
+                if save_path:
+                    try:
+                        width = int(self.width_var.get())
+                        height = int(self.height_var.get())
+                        if not width or not height:
+                            raise InvalidSizeError('Value of Width or Height is invalid.')
+                        save_func(self, save_path, width, height)
+                    except Exception as e:
+                        messagebox.showerror('Error', e)
                     else:
-                        self.current_img.save(save_path)
-                except Exception as e:
-                    messagebox.showerror('Error', e)
-                else:
-                    messagebox.showinfo('Info', 'Save successfully.')
+                        messagebox.showinfo('Info', 'Save successfully.')
+        return save_decorator
+
+    @save_image
+    def save_with_pil(self, save_path, width, height):
+        if self.current_img.size != (width, height):
+            save_img = self.current_img.copy()
+            save_img.thumbnail((width, height), Image.BICUBIC)
+            save_img.save(save_path)
+        else:
+            self.current_img.save(save_path)
+
+    @save_image
+    def save_open_cv(self, save_path, width, height):
+        if self.current_img.shape[:2] != (height, width):
+            h, w = self.current_img.shape[:2]
+            aspect = w / h
+            if width / height >= aspect:
+                nh = height
+                nw = round(nh * aspect)
+            else:
+                nw = width
+                nh = round(nw / aspect)
+            save_img = cv2.resize(self.current_img, dsize=(nw, nh))
+            cv2.imwrite(Path(save_path).as_posix(), save_img)
+        else:
+            cv2.imwrite(Path(save_path).as_posix(), self.current_img)
