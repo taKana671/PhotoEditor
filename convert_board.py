@@ -1,10 +1,11 @@
 import tkinter as tk
 import tkinter.ttk as ttk
 from pathlib import Path
-from PIL import Image, ImageTk
 
 import cv2
 import numpy as np
+from PIL import Image, ImageTk
+from scipy.interpolate import splrep, splev
 from TkinterDnD2 import *
 
 from base_board import BaseBoard
@@ -20,6 +21,9 @@ class EditorBoard(ttk.Frame):
     def create_variables(self):
         self.width_var = tk.StringVar()
         self.height_var = tk.StringVar()
+        self.noise_bool = tk.BooleanVar()
+        self.light_bool = tk.BooleanVar()
+        self.contrast_bool = tk.BooleanVar()
 
     def create_ui(self):
         base_frame = tk.Frame(self.master)
@@ -34,8 +38,8 @@ class EditorBoard(ttk.Frame):
             pady=5, sticky=(tk.W, tk.E, tk.N, tk.S))
            
     def create_convert_image_canvas(self, base_frame):
-        self.convert_image_canvas = ConvertImageCanvas(
-            base_frame, self.width_var, self.height_var)
+        self.convert_image_canvas = ConvertImageCanvas(base_frame,
+            self.width_var, self.height_var, self.noise_bool, self.light_bool, self.contrast_bool)
         self.convert_image_canvas.grid(row=0, column=1, padx=(1, 5),
             pady=5, sticky=(tk.W, tk.E, tk.N, tk.S))
 
@@ -43,20 +47,35 @@ class EditorBoard(ttk.Frame):
         controller_frame = tk.Frame(base_frame)
         controller_frame.grid(row=1, column=0, columnspan=2, 
             sticky=(tk.W, tk.E, tk.N, tk.S))
+        # save
         height_entry = ttk.Entry(controller_frame, width=10, textvariable=self.height_var)
         height_entry.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 5))
         height_label = ttk.Label(controller_frame, text='H:')
-        height_label.pack(side=tk.RIGHT, pady=(3, 10), padx=(5, 1))
+        height_label.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 1))
         width_entry = ttk.Entry(controller_frame, width=10, textvariable=self.width_var)
-        width_entry.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 5))
+        width_entry.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 1))
         width_label = ttk.Label(controller_frame, text='W:')
-        width_label.pack(side=tk.RIGHT, pady=(3, 10), padx=(5, 1))
+        width_label.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 1))
         save_button = ttk.Button(controller_frame, text='Save image', 
-            command=self.convert_image_canvas.save_image)
-        save_button.pack(side=tk.RIGHT, pady=(3, 10), padx=5)
-        mask_button = ttk.Button(controller_frame, text='Gray scale', 
+            command=self.convert_image_canvas.save_open_cv)
+        save_button.pack(side=tk.RIGHT, pady=(3, 10), padx=(10, 1))
+        # gray
+        gray_button = ttk.Button(controller_frame, text='Gray', 
             command=self.convert_image_canvas.show_gray_image)
-        mask_button.pack(side=tk.RIGHT, pady=(3, 10))
+        # sepia
+        gray_button.pack(side=tk.RIGHT, pady=(3, 10), padx=(10, 1))
+        check_noise = ttk.Checkbutton(controller_frame, text='Noise', variable=self.noise_bool,
+            onvalue=True, offvalue=False)
+        check_noise.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 1))
+        check_contrast = ttk.Checkbutton(controller_frame, text='Contrast', variable=self.contrast_bool,
+            onvalue=True, offvalue=False)
+        check_contrast.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 1))
+        check_light = ttk.Checkbutton(controller_frame, text='Light', variable=self.light_bool,
+            onvalue=True, offvalue=False)
+        check_light.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 1))
+        sepia_button = ttk.Button(controller_frame, text='Sepia', 
+            command=self.convert_image_canvas.show_sepia_image)
+        sepia_button.pack(side=tk.RIGHT, pady=(3, 10), padx=(10, 1))
 
 
 class ConvertBoard(BaseBoard):
@@ -77,9 +96,7 @@ class OriginalImageCanvas(ConvertBoard):
 
     def __init__(self, master):
         super().__init__(master)
-        # self.get_mask_images()
         self.create_bind()
-        # self.counter = 0
 
     def create_bind(self):
         self.drop_target_register(DND_FILES)
@@ -124,8 +141,11 @@ class OriginalImageCanvas(ConvertBoard):
 
 class ConvertImageCanvas(ConvertBoard):
 
-    def __init__(self, master, width_var, height_var):
+    def __init__(self, master, width_var, height_var, noise_bool, light_bool, contrast_bool):
         super().__init__(master, width_var, height_var)
+        self.noise_bool = noise_bool
+        self.light_bool = light_bool
+        self.contrast_bool = contrast_bool
         self.create_bind()
 
     def create_bind(self):
@@ -136,11 +156,59 @@ class ConvertImageCanvas(ConvertBoard):
         self.dnd_bind('<<Drop>>', self.drop)
 
     def show_gray_image(self):
-        img_gray = cv2.cvtColor(self.current_img, cv2.COLOR_BGR2GRAY)
-        img_pil = Image.fromarray(img_gray)
-        self.display_img = ImageTk.PhotoImage(img_pil.resize((600, 500)))
-        self.delete('all')
-        self.create_image(0, 0, image=self.display_img, anchor=tk.NW)
+        """Display gray image.
+        """
+        if self.img_path:
+            img = cv2.imread(self.img_path.as_posix())
+            self.current_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+            img_pil = Image.fromarray(self.current_img)
+            self.display_img = ImageTk.PhotoImage(img_pil.resize((600, 500)))
+            self.delete('all')
+            self.create_image(0, 0, image=self.display_img, anchor=tk.NW)
+
+    def correct_peripheral_light(self, img, gain_params):
+        h, w = img.shape[:2]
+        size = max([h, w])
+        x = np.linspace(-w / size, w / size, w)
+        y = np.linspace(-h / size, h / size, h)
+        xx, yy = np.meshgrid(x, y)
+        r = np.sqrt(xx ** 2 + yy ** 2)
+        gainmap = gain_params * r + 1
+        return np.clip(img * gainmap, 0., 255)
+    
+    def superimpose_noise(self, gray):
+        h, w = gray.shape
+        gauss = np.random.normal(0, 40, (h, w)).reshape(h, w)
+        return np.clip(gray + gauss, 0, 255).astype(np.uint8)
+
+    def enhance_contrast(self, gray):
+        xs = [0, 0.25, 0.5, 0.75, 1]
+        ys = [0, 0.15, 0.5, 0.85, 0.99]
+        tck = splrep(xs, ys)
+        return splev(gray / 255, tck) * 255
+
+    def show_sepia_image(self):
+        """Display sepia image.
+        """
+        if self.img_path:
+            img = cv2.imread(self.img_path.as_posix())
+            gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+            if self.noise_bool.get():
+                gray = self.superimpose_noise(gray)
+            if self.contrast_bool.get():
+                gray = self.enhance_contrast(gray)
+            if self.light_bool.get():
+                gray = self.correct_peripheral_light(gray, -0.4).astype(np.uint8)
+            img_hsv = np.zeros_like(img)
+            img_hsv[:, :, 0] = np.full_like(img_hsv[:, :, 0], 15, dtype=np.uint8)
+            img_hsv[:, :, 1] = np.full_like(img_hsv[:, :, 1], 153, dtype=np.uint8)
+            img_hsv[:, :, 2] = gray
+            self.current_img = cv2.cvtColor(img_hsv, cv2.COLOR_HSV2BGR)
+            img_rgb = cv2.cvtColor(img_hsv, cv2.COLOR_HSV2RGB)
+            img_pil = Image.fromarray(img_rgb)
+            self.display_img = ImageTk.PhotoImage(img_pil.resize((600, 500)))
+            self.delete('all')
+            self.create_image(0, 0, image=self.display_img, anchor=tk.NW)
 
     def drop_enter(self, event):
         event.widget.focus_force()
