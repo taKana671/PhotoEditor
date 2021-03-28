@@ -98,8 +98,9 @@ class ConvertBoard(BaseBoard):
         self.create_photo_image(img_rgb)
         
     def create_photo_image(self, img_rgb):
+        nw, nh = self.get_cv_aspect()
         img_pil = Image.fromarray(img_rgb)
-        self.display_img = ImageTk.PhotoImage(img_pil.resize((600, 500)))
+        self.display_img = ImageTk.PhotoImage(img_pil.resize((nw, nh)))
         self.create_image(0, 0, image=self.display_img, anchor=tk.NW)
 
 

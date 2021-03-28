@@ -32,7 +32,13 @@ class BaseBoard(tk.Canvas):
         self.create_photo_image()
 
     def create_photo_image(self):
-        self.display_img = ImageTk.PhotoImage(self.current_img.resize((600, 500)))
+        w, h = self.current_img.size
+        if w <= 600 and h <= 500:
+            self.display_img = ImageTk.PhotoImage(self.current_img)
+        else:
+            img = self.current_img.copy()
+            img.thumbnail((600, 500), Image.BICUBIC)
+            self.display_img = ImageTk.PhotoImage(img)
         self.create_image(0, 0, image=self.display_img, anchor=tk.NW)
 
     def save_image(save_func):
@@ -67,15 +73,19 @@ class BaseBoard(tk.Canvas):
     @save_image
     def save_open_cv(self, save_path, width, height):
         if self.current_img.shape[:2] != (height, width):
-            h, w = self.current_img.shape[:2]
-            aspect = w / h
-            if width / height >= aspect:
-                nh = height
-                nw = round(nh * aspect)
-            else:
-                nw = width
-                nh = round(nw / aspect)
+            nw, nh = self.get_cv_aspect(width, height)
             save_img = cv2.resize(self.current_img, dsize=(nw, nh))
             cv2.imwrite(Path(save_path).as_posix(), save_img)
         else:
             cv2.imwrite(Path(save_path).as_posix(), self.current_img)
+
+    def get_cv_aspect(self, width=600, height=500):
+        h, w = self.current_img.shape[:2]
+        aspect = w / h
+        if width / height >= aspect:
+            nh = height
+            nw = round(nh * aspect)
+        else:
+            nw = width
+            nh = round(nw / aspect)
+        return nw, nh
