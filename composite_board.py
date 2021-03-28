@@ -150,9 +150,6 @@ class CoverImageCanvas(CompositeBoard):
     def drag_end(self, event):
         print(f'Drag_ended: {event.widget}')
 
-    def close(self):
-        self.quit()
-
 
 class BaseImageCanvas(CompositeBoard):
 
@@ -173,10 +170,8 @@ class BaseImageCanvas(CompositeBoard):
             mask = CompositeBoard.mask_images[CompositeBoard.mask_id].resize(
                 self.current_img.size)
             self.current_img = Image.composite(self.current_img, img, mask)
-            self.display_img = ImageTk.PhotoImage(self.current_img.resize((600, 500)))
-            self.delete('all')
-            self.create_image(0, 0, image=self.display_img, anchor=tk.NW)
-
+            self.create_photo_image()
+            
     def drop_enter(self, event):
         event.widget.focus_force()
         print(f'Drop_enter: {event.widget}')
@@ -197,9 +192,8 @@ class BaseImageCanvas(CompositeBoard):
         else:
             self.show_image(event.data)
             self.display_image_size(*self.current_img.size)
-    def close(self):
-        self.quit()
 
+    
 if __name__ == '__main__':
     app = TkinterDnD.Tk()
     # app.geometry('650x500')

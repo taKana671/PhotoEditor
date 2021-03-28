@@ -29,6 +29,9 @@ class BaseBoard(tk.Canvas):
     def show_image(self, path):
         self.current_img = Image.open(path)
         self.img_path = Path(path)
+        self.create_photo_image()
+
+    def create_photo_image(self):
         self.display_img = ImageTk.PhotoImage(self.current_img.resize((600, 500)))
         self.create_image(0, 0, image=self.display_img, anchor=tk.NW)
 

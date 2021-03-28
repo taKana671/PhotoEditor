@@ -76,12 +76,14 @@ class EditorBoard(ttk.Frame):
         sepia_button = ttk.Button(controller_frame, text='Sepia', 
             command=self.convert_image_canvas.show_sepia_image)
         sepia_button.pack(side=tk.RIGHT, pady=(3, 10), padx=(10, 1))
+        # image like animation
         anime_button = ttk.Button(controller_frame, text='Anime', 
             command=self.convert_image_canvas.show_image_like_animation)
         anime_button.pack(side=tk.RIGHT, pady=(3, 10), padx=(10, 1))
-        anime_button = ttk.Button(controller_frame, text='Pixel', 
+        # image like pixel art
+        pixel_button = ttk.Button(controller_frame, text='Pixel', 
             command=self.convert_image_canvas.show_pixel_art)
-        anime_button.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 1))
+        pixel_button.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 1))
 
 
 class ConvertBoard(BaseBoard):
@@ -93,6 +95,9 @@ class ConvertBoard(BaseBoard):
         self.current_img = cv2.imread(path)
         self.img_path = Path(path)
         img_rgb  = cv2.cvtColor(self.current_img, cv2.COLOR_BGR2RGB)
+        self.create_photo_image(img_rgb)
+        
+    def create_photo_image(self, img_rgb):
         img_pil = Image.fromarray(img_rgb)
         self.display_img = ImageTk.PhotoImage(img_pil.resize((600, 500)))
         self.create_image(0, 0, image=self.display_img, anchor=tk.NW)
@@ -141,9 +146,6 @@ class OriginalImageCanvas(ConvertBoard):
     def drag_end(self, event):
         print(f'Drag_ended: {event.widget}')
 
-    def close(self):
-        self.quit()
-
 
 class ConvertImageCanvas(ConvertBoard):
 
@@ -167,10 +169,7 @@ class ConvertImageCanvas(ConvertBoard):
         if self.img_path:
             img = cv2.imread(self.img_path.as_posix())
             self.current_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-            img_pil = Image.fromarray(self.current_img)
-            self.display_img = ImageTk.PhotoImage(img_pil.resize((600, 500)))
-            self.delete('all')
-            self.create_image(0, 0, image=self.display_img, anchor=tk.NW)
+            self.create_photo_image(self.current_img)
 
     def correct_peripheral_light(self, img, gain_params):
         h, w = img.shape[:2]
@@ -211,10 +210,7 @@ class ConvertImageCanvas(ConvertBoard):
             img_hsv[:, :, 2] = gray
             self.current_img = cv2.cvtColor(img_hsv, cv2.COLOR_HSV2BGR)
             img_rgb = cv2.cvtColor(img_hsv, cv2.COLOR_HSV2RGB)
-            img_pil = Image.fromarray(img_rgb)
-            self.display_img = ImageTk.PhotoImage(img_pil.resize((600, 500)))
-            self.delete('all')
-            self.create_image(0, 0, image=self.display_img, anchor=tk.NW)
+            self.create_photo_image(img_rgb)
 
     def show_image_like_animation(self, k=30):
         if self.img_path:
@@ -226,10 +222,7 @@ class ConvertImageCanvas(ConvertBoard):
             img = cv2.pyrMeanShiftFiltering(img, 5, 20)
             self.current_img = cv2.subtract(img, edge)
             img_rgb = cv2.cvtColor(self.current_img, cv2.COLOR_BGR2RGB)
-            img_pil = Image.fromarray(img_rgb)
-            self.display_img = ImageTk.PhotoImage(img_pil.resize((600, 500)))
-            self.delete('all')
-            self.create_image(0, 0, image=self.display_img, anchor=tk.NW)
+            self.create_photo_image(img_rgb)
 
     def sub_color(self, img, k):
         z = img.reshape((-1, 3))
@@ -248,10 +241,7 @@ class ConvertImageCanvas(ConvertBoard):
             img = cv2.resize(img, (w, h), interpolation=cv2.INTER_NEAREST)
             self.current_img = self.sub_color(img, k)
             img_rgb = cv2.cvtColor(self.current_img, cv2.COLOR_BGR2RGB)
-            img_pil = Image.fromarray(img_rgb)
-            self.display_img = ImageTk.PhotoImage(img_pil.resize((600, 500)))
-            self.delete('all')
-            self.create_image(0, 0, image=self.display_img, anchor=tk.NW)
+            self.create_photo_image(img_rgb)
 
     def drop_enter(self, event):
         event.widget.focus_force()
@@ -271,9 +261,7 @@ class ConvertImageCanvas(ConvertBoard):
             self.show_image(event.data)
             self.display_image_size(*self.current_img.shape[:-1])
             BaseBoard.drag_start = False
-    
-    def close(self):
-        self.quit()
+
 
 if __name__ == '__main__':
     app = TkinterDnD.Tk()
