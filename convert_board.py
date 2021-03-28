@@ -24,6 +24,8 @@ class EditorBoard(ttk.Frame):
         self.noise_bool = tk.BooleanVar()
         self.light_bool = tk.BooleanVar()
         self.contrast_bool = tk.BooleanVar()
+        self.angle_int = tk.IntVar()
+        self.scale_double = tk.DoubleVar()
 
     def create_ui(self):
         base_frame = tk.Frame(self.master)
@@ -39,7 +41,8 @@ class EditorBoard(ttk.Frame):
            
     def create_convert_image_canvas(self, base_frame):
         self.convert_image_canvas = ConvertImageCanvas(base_frame,
-            self.width_var, self.height_var, self.noise_bool, self.light_bool, self.contrast_bool)
+            self.width_var, self.height_var, self.noise_bool, self.light_bool, 
+            self.contrast_bool, self.scale_double, self.angle_int)
         self.convert_image_canvas.grid(row=0, column=1, padx=(1, 5),
             pady=5, sticky=(tk.W, tk.E, tk.N, tk.S))
 
@@ -83,7 +86,24 @@ class EditorBoard(ttk.Frame):
         # image like pixel art
         pixel_button = ttk.Button(controller_frame, text='Pixel', 
             command=self.convert_image_canvas.show_pixel_art)
-        pixel_button.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 1))
+        pixel_button.pack(side=tk.RIGHT, pady=(3, 10), padx=(10, 1))
+        # rotate
+        scale_entry = ttk.Entry(controller_frame, width=5, textvariable=self.scale_double)
+        scale_entry.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 1))
+        scale_label = ttk.Label(controller_frame, text='Scale')
+        scale_label.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 1))
+        angle_entry = ttk.Entry(controller_frame, width=5, textvariable=self.angle_int)
+        angle_entry.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 1))
+        angle_label = ttk.Label(controller_frame, text='Angle')
+        angle_label.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 1))
+        self.scale_double.set(0.5)
+        self.angle_int.set(45)
+        repeat_button = ttk.Button(controller_frame, text='Repeat', 
+            command=self.convert_image_canvas.show_repeated_image)
+        repeat_button.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 1))
+        rotate_button = ttk.Button(controller_frame, text='Rotate', 
+            command=self.convert_image_canvas.show_rotated_image)
+        rotate_button.pack(side=tk.RIGHT, pady=(3, 10), padx=(10, 1))
 
 
 class ConvertBoard(BaseBoard):
@@ -150,11 +170,14 @@ class OriginalImageCanvas(ConvertBoard):
 
 class ConvertImageCanvas(ConvertBoard):
 
-    def __init__(self, master, width_var, height_var, noise_bool, light_bool, contrast_bool):
+    def __init__(self, master, width_var, height_var, noise_bool,
+                 light_bool, contrast_bool, scale_double, angle_int):
         super().__init__(master, width_var, height_var)
         self.noise_bool = noise_bool
         self.light_bool = light_bool
         self.contrast_bool = contrast_bool
+        self.scale_double = scale_double
+        self.angle_int = angle_int
         self.create_bind()
 
     def create_bind(self):
@@ -243,6 +266,38 @@ class ConvertImageCanvas(ConvertBoard):
             self.current_img = self.sub_color(img, k)
             img_rgb = cv2.cvtColor(self.current_img, cv2.COLOR_BGR2RGB)
             self.create_photo_image(img_rgb)
+
+    def get_scale_and_angle(self):
+        try:
+            scale = self.scale_double.get()
+            angle = self.angle_int.get()
+        except Exception:
+            return None, None
+        else:
+            return scale, angle
+    
+    def show_repeated_image(self):
+        if self.img_path:
+            scale, angle = self.get_scale_and_angle()
+            if scale is not None and angle is not None:
+                img = cv2.imread(self.img_path.as_posix())
+                h, w, ch = img.shape
+                mat = cv2.getRotationMatrix2D((w / 2, h / 2), angle, scale)
+                self.current_img = cv2.warpAffine(img, mat, (w, h), borderMode=cv2.BORDER_WRAP)
+                img_rgb = cv2.cvtColor(self.current_img, cv2.COLOR_BGR2RGB)
+                self.create_photo_image(img_rgb)
+
+    def show_rotated_image(self):
+        if self.img_path:
+            scale, angle = self.get_scale_and_angle()
+            if scale is not None and angle is not None:
+                img = cv2.imread(self.img_path.as_posix())
+                dst = img // 4
+                h, w, ch = img.shape
+                mat = cv2.getRotationMatrix2D((w / 2, h / 2), angle, scale)
+                self.current_img = cv2.warpAffine(img, mat, (w, h), borderMode=cv2.BORDER_TRANSPARENT, dst=dst)
+                img_rgb = cv2.cvtColor(self.current_img, cv2.COLOR_BGR2RGB)
+                self.create_photo_image(img_rgb)
 
     def drop_enter(self, event):
         event.widget.focus_force()
