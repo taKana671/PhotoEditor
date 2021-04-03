@@ -1,3 +1,4 @@
+import os
 import tkinter as tk
 import tkinter.ttk as ttk
 from pathlib import Path
@@ -41,11 +42,18 @@ class BaseBoard(tk.Canvas):
             self.display_img = ImageTk.PhotoImage(img)
         self.create_image(0, 0, image=self.display_img, anchor=tk.NW)
 
+    def is_image_file(self, path):
+        if os.path.isfile(path):
+            _, ext = os.path.splitext(path)
+            if ext in {'.bmp', '.tiff', '.jpg', '.png', '.PNG'}:
+                return True
+        return False
+
     def save_image(save_func):
         def save_decorator(self):
-            if self.img_path:
+            if self.current_img:
                 save_path = filedialog.asksaveasfilename(
-                    initialdir=self.img_path.parent,
+                    # initialdir=self.img_path.parent,
                     title='Save as',
                     filetypes=[('jpg', '*.jpg'), ('png', '*.png')])
                 if save_path:

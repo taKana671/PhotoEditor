@@ -1,3 +1,5 @@
+import os
+import re
 import tkinter as tk
 import tkinter.ttk as ttk
 from pathlib import Path
@@ -68,7 +70,7 @@ class EditorBoard(ttk.Frame):
             controller_frame, width=5, textvariable=self.col_var)
         width_entry.pack(side=tk.RIGHT, pady=(3, 10), padx=(5, 1))
         concat_repeat_button = ttk.Button(controller_frame, text='Repeat', 
-            command=self.connected_image_canvas.show_concat_repeat_image)
+            command=self.connected_image_canvas.show_repeated_image)
         concat_repeat_button.pack(side=tk.RIGHT, pady=(3, 10))
         self.row_var.set(3)
         self.col_var.set(4)
@@ -98,20 +100,26 @@ class EditorBoard(ttk.Frame):
 
 class ConnectBoard(BaseBoard):
 
+    sources = {}
+    source_idx = 0
+    is_get_image = False
+    
     def __init__(self, master, width_var=None, height_var=None):
         super().__init__(master, width_var, height_var)
 
+    def show_image(self, path):
+        self.current_img = Image.open(path)
+        self.create_photo_image()
 
+    
 class OriginalImageCanvas(ConnectBoard):
 
     def __init__(self, master):
         super().__init__(master)
-        self.path_list = [] 
         self.create_bind()
        
     def create_bind(self):
-        self.drop_target_register(DND_FILES)
-        # self.drag_source_register(1, DND_TEXT, DND_FILES)
+        self.drop_target_register(DND_ALL)
         self.drag_source_register(1, '*')
         self.dnd_bind('<<DropEnter>>', self.drop_enter)
         self.dnd_bind('<<DropPosition>>', self.drop_position)
@@ -121,19 +129,17 @@ class OriginalImageCanvas(ConnectBoard):
         self.dnd_bind('<<DragEndCmd>>', self.drag_end)
 
     def change_images(self):
-        if len(self.path_list):
-            index = self.path_list.index(self.img_path.as_posix())
-            if index == len(self.path_list) - 1:
-                index = 0
-            else:
-                index += 1
-            self.show_image(self.path_list[index])
-
+        if ConnectBoard.sources:
+            ConnectBoard.source_idx += 1
+            if ConnectBoard.source_idx > len(ConnectBoard.sources):
+                ConnectBoard.source_idx = 1
+            self.current_img = ConnectBoard.sources[ConnectBoard.source_idx]
+            self.create_photo_image()
+    
     def clear_images(self):
         self.delete('all')
-        self.path_list = []
-        self.img_path = None
-        self.last_img = None
+        ConnectBoard.sources = {}
+        ConnectBoard.source_idx = 0        
         self.current_img = None
 
     def drop_enter(self, event):
@@ -150,15 +156,21 @@ class OriginalImageCanvas(ConnectBoard):
 
     def drop(self, event):
         print(f'Drop: {event.widget}')
-        if event.data not in self.path_list:
-            self.path_list.append(event.data)
-        self.show_image(event.data)
-        BaseBoard.drag_start = False
-       
+        if re.fullmatch('[0-9]+', event.data):
+            self.current_img = ConnectBoard.sources[int(event.data)]
+            self.create_photo_image()
+            ConnectBoard.is_get_image = True
+        elif self.is_image_file(event.data):
+            self.show_image(event.data)
+            if not ConnectBoard.sources or not self.current_img in ConnectBoard.sources.values():
+                ConnectBoard.source_idx = len(ConnectBoard.sources) + 1
+                ConnectBoard.sources[ConnectBoard.source_idx] = self.current_img
+            BaseBoard.drag_start = False
+     
     def drag_init(self, event):
         print(f'Drag_start: {event.widget}')
         BaseBoard.drag_start = True
-        data = (self.img_path, )
+        data = (ConnectBoard.source_idx,)
         return((ASK, COPY), (DND_FILES), data)
 
     def drag_end(self, event):
@@ -174,18 +186,21 @@ class ConnectedImageCanvas(ConnectBoard):
         self.radio_bool = radio_bool
         self.create_bind()
         self.concat_imgs = []
+        self.is_key_added = False
 
     def create_bind(self):
-        self.drop_target_register(DND_FILES)
+        self.drop_target_register(DND_ALL)
+        self.drag_source_register(1, '*')
         self.dnd_bind('<<DropEnter>>', self.drop_enter)
         self.dnd_bind('<<DropPosition>>', self.drop_position)
         self.dnd_bind('<<DropLeave>>', self.drop_leave)
         self.dnd_bind('<<Drop>>', self.drop)
+        self.dnd_bind('<<DragInitCmd>>', self.drag_init)
+        self.dnd_bind('<<DragEndCmd>>', self.drag_end)
 
     def reset_image(self):
         self.delete('all')
         self.concat_imgs = []
-        self.img_path = None
         self.current_img = None
 
     def concat_horizontally_repeat(self, img, col):
@@ -200,7 +215,7 @@ class ConnectedImageCanvas(ConnectBoard):
             base.paste(img, (0, y * img.height))
         return base
     
-    def show_concat_repeat_image(self):
+    def show_repeated_image(self):
         try:
             col = int(self.col_var.get())
             row = int(self.row_var.get())
@@ -209,6 +224,7 @@ class ConnectedImageCanvas(ConnectBoard):
             img = self.current_img.resize((self.current_img.width//col, self.current_img.height//row))
             base_h = self.concat_horizontally_repeat(img, col)
             self.current_img = self.concat_vertically_repeat(base_h, row)
+            self.concat_imgs = [self.current_img]
             self.create_photo_image()
             self.display_image_size(*self.current_img.size)
         except Exception as e:
@@ -244,9 +260,18 @@ class ConnectedImageCanvas(ConnectBoard):
                 self.current_img = self.concat_horizontally()
             else:
                 self.current_img = self.concat_vertically()
+            self.concat_imgs = [self.current_img]
             self.create_photo_image()
             self.display_image_size(*self.current_img.size) 
-        
+
+    def get_key(self):
+        key_list = [k for k, v in ConnectBoard.sources.items() if v == self.current_img]
+        if key_list:
+            return key_list[0]
+        else:
+            self.is_key_added = True
+            return len(ConnectBoard.sources) + 1
+
     def drop_enter(self, event):
         event.widget.focus_force()
         print(f'Drop_enter: {event.widget}')
@@ -262,7 +287,27 @@ class ConnectedImageCanvas(ConnectBoard):
     def drop(self, event):
         print('Dropped:', event.widget)
         if BaseBoard.drag_start:
-            self.show_image(event.data)
+            self.current_img = ConnectBoard.sources[int(event.data)]
+            self.create_photo_image()
             self.display_image_size(*self.current_img.size)
             self.concat_imgs.append(self.current_img)
             BaseBoard.drag_start = False
+
+    def drag_init(self, event):
+        print(f'Drag_start: {event.widget}')
+        key = self.get_key()
+        ConnectBoard.sources[key] = self.current_img
+        ConnectBoard.source_idx = key
+        data = (key,)
+        return((ASK, COPY), (DND_FILES), data)
+
+    def drag_end(self, event):
+        """If the current_img was not dropped to the OriginalImageCanvas,
+           it's deleted from the ConnectBoard.sources. 
+        """
+        print(f'Drag_ended: {event.widget}')
+        if not ConnectBoard.is_get_image and self.is_key_added:
+            key = len(ConnectBoard.sources)
+            del ConnectBoard.sources[key]
+        ConnectBoard.is_get_image = False
+        self.is_key_added = False
