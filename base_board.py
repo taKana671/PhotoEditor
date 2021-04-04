@@ -1,6 +1,7 @@
 import os
 import tkinter as tk
 import tkinter.ttk as ttk
+from functools import wraps
 from pathlib import Path
 from tkinter import filedialog, messagebox
 
@@ -17,7 +18,6 @@ class BaseBoard(tk.Canvas):
     drag_start = False
    
     def __init__(self, master, width_var=None, height_var=None):
-        self.img_path = None
         self.current_img = None
         self.width_var = width_var
         self.height_var = height_var
@@ -27,11 +27,6 @@ class BaseBoard(tk.Canvas):
         self.width_var.set(width)
         self.height_var.set(height)
      
-    def show_image(self, path):
-        self.current_img = Image.open(path)
-        self.img_path = Path(path)
-        self.create_photo_image()
-
     def create_photo_image(self):
         w, h = self.current_img.size
         if w <= 600 and h <= 500:
@@ -50,10 +45,10 @@ class BaseBoard(tk.Canvas):
         return False
 
     def save_image(save_func):
+        @wraps(save_func)
         def save_decorator(self):
-            if self.current_img:
+            if self.current_img is not None:
                 save_path = filedialog.asksaveasfilename(
-                    # initialdir=self.img_path.parent,
                     title='Save as',
                     filetypes=[('jpg', '*.jpg'), ('png', '*.png')])
                 if save_path:

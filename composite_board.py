@@ -65,6 +65,12 @@ class CompositeBoard(BaseBoard):
 
     def __init__(self, master, width_var=None, height_var=None):
         super().__init__(master, width_var, height_var)
+        self.img_path = None
+
+    def show_image(self, path):
+        self.current_img = Image.open(path)
+        self.img_path = Path(path)
+        self.create_photo_image()
 
 
 class CoverImageCanvas(CompositeBoard):
@@ -92,7 +98,7 @@ class CoverImageCanvas(CompositeBoard):
         else:
             return np.tile(np.linspace(start, stop, height), (width, 1)).T
 
-    def get_3d_dradient(self, start_tuple, stop_tuple, is_horizontal_tuple,
+    def get_3d_gradient(self, start_tuple, stop_tuple, is_horizontal_tuple,
             width=600, height=500):
         array = np.zeros((height, width, len(start_tuple)), dtype=np.float)
         for i, (start, stop, is_horizontal) in enumerate(zip(start_tuple, stop_tuple, is_horizontal_tuple)):
@@ -110,7 +116,7 @@ class CoverImageCanvas(CompositeBoard):
         ]
         for param in params:
             start, stop, is_horizontal = param
-            array = self.get_3d_dradient(start, stop, is_horizontal)
+            array = self.get_3d_gradient(start, stop, is_horizontal)
             yield Image.fromarray(np.uint8(array)).convert('L')
 
     def get_mask_images(self):
@@ -138,8 +144,8 @@ class CoverImageCanvas(CompositeBoard):
 
     def drop(self, event):
         print(f'Drop: {event.widget}')
-        self.show_image(event.data)
-        self.drag_start = False
+        if self.is_image_file(event.data):
+            self.show_image(event.data)
        
     def drag_init(self, event):
         print(f'Drag_start: {event.widget}')
@@ -190,10 +196,11 @@ class BaseImageCanvas(CompositeBoard):
             self.show_composite_image(event.data)
             BaseBoard.drag_start = False
         else:
-            self.show_image(event.data)
-            self.display_image_size(*self.current_img.size)
+            if self.is_image_file(event.data):
+                self.show_image(event.data)
+                self.display_image_size(*self.current_img.size)
 
-    
+
 if __name__ == '__main__':
     app = TkinterDnD.Tk()
     # app.geometry('650x500')

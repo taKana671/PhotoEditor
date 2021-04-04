@@ -123,7 +123,7 @@ class ConvertBoard(BaseBoard):
         self.display_img = ImageTk.PhotoImage(img_pil.resize((nw, nh)))
         self.create_image(0, 0, image=self.display_img, anchor=tk.NW)
 
-
+    
 class OriginalImageCanvas(ConvertBoard):
 
     def __init__(self, master):
@@ -155,8 +155,8 @@ class OriginalImageCanvas(ConvertBoard):
 
     def drop(self, event):
         print(f'Drop: {event.widget}')
-        self.show_image(event.data)
-        self.drag_start = False
+        if self.is_image_file(event.data):
+            self.show_image(event.data)
        
     def drag_init(self, event):
         print(f'Drag_start: {event.widget}')
@@ -178,6 +178,7 @@ class ConvertImageCanvas(ConvertBoard):
         self.contrast_bool = contrast_bool
         self.scale_double = scale_double
         self.angle_int = angle_int
+        self.img_path = None
         self.create_bind()
 
     def create_bind(self):
@@ -283,7 +284,8 @@ class ConvertImageCanvas(ConvertBoard):
                 img = cv2.imread(self.img_path.as_posix())
                 h, w, ch = img.shape
                 mat = cv2.getRotationMatrix2D((w / 2, h / 2), angle, scale)
-                self.current_img = cv2.warpAffine(img, mat, (w, h), borderMode=cv2.BORDER_WRAP)
+                self.current_img = cv2.warpAffine(
+                    img, mat, (w, h), borderMode=cv2.BORDER_WRAP)
                 img_rgb = cv2.cvtColor(self.current_img, cv2.COLOR_BGR2RGB)
                 self.create_photo_image(img_rgb)
 
@@ -295,7 +297,8 @@ class ConvertImageCanvas(ConvertBoard):
                 dst = img // 4
                 h, w, ch = img.shape
                 mat = cv2.getRotationMatrix2D((w / 2, h / 2), angle, scale)
-                self.current_img = cv2.warpAffine(img, mat, (w, h), borderMode=cv2.BORDER_TRANSPARENT, dst=dst)
+                self.current_img = cv2.warpAffine(
+                    img, mat, (w, h), borderMode=cv2.BORDER_TRANSPARENT, dst=dst)
                 img_rgb = cv2.cvtColor(self.current_img, cv2.COLOR_BGR2RGB)
                 self.create_photo_image(img_rgb)
 

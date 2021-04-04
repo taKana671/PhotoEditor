@@ -165,7 +165,6 @@ class OriginalImageCanvas(ConnectBoard):
             if not ConnectBoard.sources or not self.current_img in ConnectBoard.sources.values():
                 ConnectBoard.source_idx = len(ConnectBoard.sources) + 1
                 ConnectBoard.sources[ConnectBoard.source_idx] = self.current_img
-            BaseBoard.drag_start = False
      
     def drag_init(self, event):
         print(f'Drag_start: {event.widget}')
@@ -233,7 +232,8 @@ class ConnectedImageCanvas(ConnectBoard):
     def concat_vertically(self, resample=Image.BICUBIC):
         min_width = min(img.width for img in self.concat_imgs)
         resized_imgs = [img.resize(
-            (min_width, int(img.height * min_width / img.width)), resample=resample) for img in self.concat_imgs]
+            (min_width, int(img.height * min_width / img.width)), resample=resample) \
+            for img in self.concat_imgs]
         total_height = sum(img.height for img in resized_imgs)
         base = Image.new('RGB', (min_width, total_height))
         pos_y = 0
@@ -245,7 +245,8 @@ class ConnectedImageCanvas(ConnectBoard):
     def concat_horizontally(self, resample=Image.BICUBIC):
         min_height = min(img.height for img in self.concat_imgs)
         resized_imgs = [img.resize(
-            (int(img.width * min_height / img.height), min_height), resample=resample) for img in self.concat_imgs]
+            (int(img.width * min_height / img.height), min_height), resample=resample) \
+            for img in self.concat_imgs]
         total_width = sum(img.width for img in resized_imgs)
         base = Image.new('RGB', (total_width, min_height))
         pos_x = 0
