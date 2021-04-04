@@ -118,21 +118,25 @@ class ConvertBoard(BaseBoard):
         self.create_photo_image(img_rgb)
         
     def create_photo_image(self, img_rgb):
-        nw, nh = self.get_cv_aspect()
+        h, w = self.current_img.shape[:2]
         img_pil = Image.fromarray(img_rgb)
-        self.display_img = ImageTk.PhotoImage(img_pil.resize((nw, nh)))
+        if w <= 600 and h <= 500:
+            self.display_img = ImageTk.PhotoImage(img_pil)
+        else:
+            nw, nh = self.get_cv_aspect()
+            self.display_img = ImageTk.PhotoImage(img_pil.resize((nw, nh)))
         self.create_image(0, 0, image=self.display_img, anchor=tk.NW)
 
     
 class OriginalImageCanvas(ConvertBoard):
-
+    """The left canvas
+    """
     def __init__(self, master):
         super().__init__(master)
         self.create_bind()
 
     def create_bind(self):
         self.drop_target_register(DND_FILES)
-        # self.drag_source_register(1, DND_TEXT, DND_FILES)
         self.drag_source_register(1, '*')
         self.dnd_bind('<<DropEnter>>', self.drop_enter)
         self.dnd_bind('<<DropPosition>>', self.drop_position)
@@ -159,6 +163,9 @@ class OriginalImageCanvas(ConvertBoard):
             self.show_image(event.data)
        
     def drag_init(self, event):
+        """Set BaseBoard.drag_start to True, 
+           when drag starts from the left canvas.  
+        """
         print(f'Drag_start: {event.widget}')
         BaseBoard.drag_start = True
         data = (self.img_path, )
@@ -169,7 +176,8 @@ class OriginalImageCanvas(ConvertBoard):
 
 
 class ConvertImageCanvas(ConvertBoard):
-
+    """The right canvas
+    """
     def __init__(self, master, width_var, height_var, noise_bool,
                  light_bool, contrast_bool, scale_double, angle_int):
         super().__init__(master, width_var, height_var)
@@ -189,8 +197,6 @@ class ConvertImageCanvas(ConvertBoard):
         self.dnd_bind('<<Drop>>', self.drop)
 
     def show_gray_image(self):
-        """Display gray image.
-        """
         if self.img_path:
             img = cv2.imread(self.img_path.as_posix())
             self.current_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -218,8 +224,6 @@ class ConvertImageCanvas(ConvertBoard):
         return splev(gray / 255, tck) * 255
 
     def show_sepia_image(self):
-        """Display sepia image.
-        """
         if self.img_path:
             img = cv2.imread(self.img_path.as_posix())
             gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -315,6 +319,9 @@ class ConvertImageCanvas(ConvertBoard):
         print(f'Drop_Leave {event.widget}')
 
     def drop(self, event):
+        """Display image, only when the imaged was 
+           dragged from the left canvas. 
+        """
         print('Dropped:', event.widget)
         if BaseBoard.drag_start:
             self.show_image(event.data)
