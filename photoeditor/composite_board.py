@@ -1,7 +1,7 @@
 import tkinter as tk
 import tkinter.ttk as ttk
 from pathlib import Path
-from PIL import Image, ImageTk
+from PIL import Image, ImageDraw, ImageTk
 
 import numpy as np
 from TkinterDnD2 import *
@@ -13,12 +13,17 @@ class EditorBoard(ttk.Frame):
 
     def __init__(self, master):
         super().__init__(master)
+        self.coordinates = {}
         self.create_variables()
         self.create_ui()
 
     def create_variables(self):
         self.width_var = tk.StringVar()
         self.height_var = tk.StringVar()
+        self.top_left_x = tk.IntVar()
+        self.top_left_y = tk.IntVar()
+        self.bottom_right_x = tk.IntVar()
+        self.bottom_right_y = tk.IntVar()
 
     def create_ui(self):
         base_frame = tk.Frame(self.master)
@@ -28,34 +33,67 @@ class EditorBoard(ttk.Frame):
         self.create_controller(base_frame)
 
     def create_cover_image_canvas(self, base_frame):
-        self.cover_image_canvas = CoverImageCanvas(base_frame)
+        self.cover_image_canvas = CoverImageCanvas(
+            base_frame, self.coordinates)
         self.cover_image_canvas.grid(row=0, column=0, padx=(5, 1),
             pady=5, sticky=(tk.W, tk.E, tk.N, tk.S))
-           
+        self.cover_image_canvas.bind(
+            '<ButtonRelease-3>', self.create_coordinates_point)
+
     def create_base_image_canvas(self, base_frame):
         self.base_image_canvas = BaseImageCanvas(
             base_frame, self.width_var, self.height_var)
         self.base_image_canvas.grid(row=0, column=1, padx=(1, 5),
             pady=5, sticky=(tk.W, tk.E, tk.N, tk.S))
+    
+    def create_coordinates_point(self, event):
+        """Get the coordinates of where an image displayed 
+           on the left canvas was right-click, and create 
+           white ovals there. 
+        """
+        if self.cover_image_canvas.display_img:
+            img_width = self.cover_image_canvas.display_img.width()
+            img_height = self.cover_image_canvas.display_img.height()
+            x, y = event.x, event.y
+            if x <= img_width and y <= img_height:
+                id = self.cover_image_canvas.create_oval(
+                    x, y, x+7, y+7, outline='white', fill='white')
+                self.coordinates[id] = (x, y)
+
+    def delete_coordinates_points(self):
+        """Delete white ovals on an image displayed on the left canvas.
+        """
+        ids = list(self.coordinates.keys())
+        self.cover_image_canvas.delete(*ids)
+        self.coordinates.clear()
 
     def create_controller(self, base_frame):
         controller_frame = tk.Frame(base_frame)
         controller_frame.grid(row=1, column=0, columnspan=2, 
             sticky=(tk.W, tk.E, tk.N, tk.S))
+        # save
         height_entry = ttk.Entry(controller_frame, width=10, textvariable=self.height_var)
         height_entry.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 5))
         height_label = ttk.Label(controller_frame, text='H:')
-        height_label.pack(side=tk.RIGHT, pady=(3, 10), padx=(5, 1))
+        height_label.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 1))
         width_entry = ttk.Entry(controller_frame, width=10, textvariable=self.width_var)
-        width_entry.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 5))
+        width_entry.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 1))
         width_label = ttk.Label(controller_frame, text='W:')
-        width_label.pack(side=tk.RIGHT, pady=(3, 10), padx=(5, 1))
-        save_button = ttk.Button(controller_frame, text='Save image', 
+        width_label.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 1))
+        save_button = ttk.Button(controller_frame, text='Save', 
             command=self.base_image_canvas.save_with_pil)
-        save_button.pack(side=tk.RIGHT, pady=(3, 10), padx=5)
+        save_button.pack(side=tk.RIGHT, pady=(3, 10), padx=(10, 1))
+        # change mask
         mask_button = ttk.Button(controller_frame, text='Change mask', 
             command=self.cover_image_canvas.toggle_mask)
-        mask_button.pack(side=tk.RIGHT, pady=(3, 10))
+        mask_button.pack(side=tk.RIGHT, pady=(3, 10), padx=(10, 1))
+        # create mask
+        draw_button = ttk.Button(controller_frame, text='Reset', 
+            command=self.delete_coordinates_points)
+        draw_button.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 1))
+        create_mask_button = ttk.Button(controller_frame, text='Create mask', 
+            command=self.cover_image_canvas.create_mask)
+        create_mask_button.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 1))
 
 
 class CompositeBoard(BaseBoard):
@@ -72,11 +110,13 @@ class CompositeBoard(BaseBoard):
         self.img_path = Path(path)
         self.create_photo_image()
 
-
+    
 class CoverImageCanvas(CompositeBoard):
-
-    def __init__(self, master):
+    """Left canvas to create masks
+    """
+    def __init__(self, master, coordinates):
         super().__init__(master)
+        self.coordinates = coordinates
         self.get_mask_images()
         self.create_bind()
         self.counter = 0
@@ -130,6 +170,24 @@ class CoverImageCanvas(CompositeBoard):
         self.display_img = ImageTk.PhotoImage(mask_image)
         self.create_image(0, 0, image=self.display_img, anchor=tk.NW)
 
+    def draw_2d_shape(self):
+        coordinates = tuple(self.coordinates.values())
+        base = Image.new(
+            'L', (self.display_img.width(), self.display_img.height()), 0)
+        draw = ImageDraw.Draw(base)
+        if len(coordinates) == 2:
+            draw.ellipse(coordinates, fill=255)
+        else:
+            draw.polygon(coordinates, fill=255)
+        return base
+
+    def create_mask(self):
+        if len(self.coordinates) >= 2:
+            mask = self.draw_2d_shape()
+            self.display_img = ImageTk.PhotoImage(mask)
+            self.create_image(0, 0, image=self.display_img, anchor=tk.NW)
+            self.coordinates.clear()
+
     def drop_enter(self, event):
         event.widget.focus_force()
         print(f'Drop_enter: {event.widget}')
@@ -158,6 +216,8 @@ class CoverImageCanvas(CompositeBoard):
 
 
 class BaseImageCanvas(CompositeBoard):
+    """A class to composite images
+    """
 
     def __init__(self, master, width_var, height_var):
         super().__init__(master, width_var, height_var)
@@ -173,6 +233,8 @@ class BaseImageCanvas(CompositeBoard):
     def show_composite_image(self, path):
         if self.current_img:
             img = Image.open(path).resize(self.current_img.size)
+            print(CompositeBoard.mask_images)
+            print(CompositeBoard.mask_id)
             mask = CompositeBoard.mask_images[CompositeBoard.mask_id].resize(
                 self.current_img.size)
             self.current_img = Image.composite(self.current_img, img, mask)

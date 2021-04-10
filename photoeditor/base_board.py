@@ -19,6 +19,7 @@ class BaseBoard(tk.Canvas):
    
     def __init__(self, master, width_var=None, height_var=None):
         self.current_img = None
+        self.display_img = None
         self.width_var = width_var
         self.height_var = height_var
         super().__init__(master, width=600, height=500, bg='snow')
@@ -28,14 +29,18 @@ class BaseBoard(tk.Canvas):
         self.height_var.set(height)
      
     def create_photo_image(self):
+        display_img = self.get_display_image()
+        self.display_img = ImageTk.PhotoImage(display_img)
+        self.create_image(0, 0, image=self.display_img, anchor=tk.NW)
+        
+    def get_display_image(self):
         w, h = self.current_img.size
         if w <= 600 and h <= 500:
-            self.display_img = ImageTk.PhotoImage(self.current_img)
+            return self.current_img
         else:
             img = self.current_img.copy()
             img.thumbnail((600, 500), Image.BICUBIC)
-            self.display_img = ImageTk.PhotoImage(img)
-        self.create_image(0, 0, image=self.display_img, anchor=tk.NW)
+            return img
 
     def is_image_file(self, path):
         if os.path.isfile(path):
