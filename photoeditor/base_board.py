@@ -30,6 +30,7 @@ class BaseBoard(tk.Canvas):
      
     def create_photo_image(self):
         display_img = self.get_display_image()
+        self.delete('all')
         self.display_img = ImageTk.PhotoImage(display_img)
         self.create_image(0, 0, image=self.display_img, anchor=tk.NW)
         
