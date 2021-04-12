@@ -87,24 +87,24 @@ class EditorBoard(ttk.Frame):
         save_button = ttk.Button(controller_frame, text='Save', 
             command=self.base_image_canvas.save_with_pil)
         save_button.pack(side=tk.RIGHT, pady=(3, 10), padx=(10, 1))
-        # change mask
-        mask_button = ttk.Button(controller_frame, text='Change mask', 
-            command=self.cover_image_canvas.toggle_mask)
-        mask_button.pack(side=tk.RIGHT, pady=(3, 10), padx=(10, 1))
         # create mask
         reset_button = ttk.Button(controller_frame, text='Reset', 
             command=self.delete_vertices)
-        reset_button.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 1))
-        check_blur = ttk.Checkbutton(controller_frame, text='Blur', variable=self.blur_bool,
-            onvalue=True, offvalue=False)
-        check_blur.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 1))
+        reset_button.pack(side=tk.LEFT, pady=(3, 10), padx=(5, 1))
+        create_mask_button = ttk.Button(controller_frame, text='Create', 
+            command=self.cover_image_canvas.create_new_mask)
+        create_mask_button.pack(side=tk.LEFT, pady=(3, 10), padx=(1, 1))
         check_rectangle = ttk.Checkbutton(controller_frame, text='Rectangle', variable=self.rectangle_bool,
             onvalue=True, offvalue=False)
-        check_rectangle.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 1))
+        check_rectangle.pack(side=tk.LEFT, pady=(3, 10), padx=(1, 1))
         self.blur_bool.set(True)        
-        create_mask_button = ttk.Button(controller_frame, text='Create mask', 
-            command=self.cover_image_canvas.create_new_mask)
-        create_mask_button.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 1))
+        check_blur = ttk.Checkbutton(controller_frame, text='Blur', variable=self.blur_bool,
+            onvalue=True, offvalue=False)
+        check_blur.pack(side=tk.LEFT, pady=(3, 10), padx=(1, 1))
+        # change mask
+        mask_button = ttk.Button(controller_frame, text='Change', 
+            command=self.cover_image_canvas.toggle_mask)
+        mask_button.pack(side=tk.LEFT, pady=(3, 10), padx=(1, 1))
 
 
 class CompositeBoard(BaseBoard):
