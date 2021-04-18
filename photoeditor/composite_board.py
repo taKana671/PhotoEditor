@@ -105,6 +105,13 @@ class EditorBoard(ttk.Frame):
         mask_button = ttk.Button(controller_frame, text='Change', 
             command=self.cover_image_canvas.toggle_mask)
         mask_button.pack(side=tk.LEFT, pady=(3, 10), padx=(1, 1))
+        # crop
+        crop_button = ttk.Button(controller_frame, text='Crop',
+            command=self.cover_image_canvas.crop_image)
+        crop_button.pack(side=tk.LEFT, pady=(3, 10), padx=(10, 1))
+        save_cropped = ttk.Button(controller_frame, text='Save cropped',
+            command='')
+        save_cropped.pack(side=tk.LEFT, pady=(3, 10), padx=(1, 1))
 
 
 class CompositeBoard(BaseBoard):
@@ -235,6 +242,14 @@ class CoverImageCanvas(CompositeBoard):
         else:
             return None
 
+    def crop_image(self):
+        if len(self.vertices) >= 2:
+            base = self.draw_shape()
+            self.current_img = self.get_display_image()
+            self.current_img.putalpha(base)
+            self.create_photo_image()
+            self.vertices.clear()
+
     def drop_enter(self, event):
         event.widget.focus_force()
         print(f'Drop_enter: {event.widget}')
@@ -315,6 +330,7 @@ class BaseImageCanvas(CompositeBoard):
             BaseBoard.drag_start = False
         else:
             if self.is_image_file(event.data):
+                print('event data', event.data)
                 self.show_image(event.data)
                 self.display_image_size(*self.current_img.size)
                 if len(self.composite_images) == 2:
