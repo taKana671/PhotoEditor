@@ -87,6 +87,9 @@ class EditorBoard(ttk.Frame):
         save_button = ttk.Button(controller_frame, text='Save', 
             command=self.base_image_canvas.save_with_pil)
         save_button.pack(side=tk.RIGHT, pady=(3, 10), padx=(10, 1))
+        clear_button = ttk.Button(controller_frame, text='Clear', 
+            command=self.base_image_canvas.clear_image)
+        clear_button.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 1))
         # create mask
         reset_button = ttk.Button(controller_frame, text='Reset', 
             command=self.delete_vertices)
@@ -116,8 +119,10 @@ class EditorBoard(ttk.Frame):
 
 class CompositeBoard(BaseBoard):
 
-    mask_id = 0
-    mask_images = {}
+    original_mask_id = None
+    cropped_image_id = None
+    holder = {}
+    mask_count = 0
 
     def __init__(self, master, width_var=None, height_var=None):
         super().__init__(master, width_var, height_var)
@@ -181,12 +186,15 @@ class CoverImageCanvas(CompositeBoard):
 
     def get_mask_images(self):
         for i, image in enumerate(self.create_mask_images()):
-            CompositeBoard.mask_images[i] = image
+            CompositeBoard.holder[i] = image
+        CompositeBoard.mask_count = len(CompositeBoard.holder)
+        CompositeBoard.original_mask_id = CompositeBoard.mask_count
+        CompositeBoard.cropped_image_id = CompositeBoard.original_mask_id + 1
 
     def toggle_mask(self):
         self.counter += 1
-        CompositeBoard.mask_id = self.counter % (len(CompositeBoard.mask_images))
-        self.current_img = CompositeBoard.mask_images[CompositeBoard.mask_id]
+        holder_id = self.counter % CompositeBoard.mask_count
+        self.current_img = CompositeBoard.holder[holder_id]
         self.create_photo_image()
 
     def sort_two_vertices(self, vertices):
@@ -227,15 +235,10 @@ class CoverImageCanvas(CompositeBoard):
             self.current_img = self.draw_shape()
             self.create_photo_image()
             self.vertices.clear()
-            ret = messagebox.askyesno('Confirm', 'Do you want to save this mask image?')
-            if ret:
-                CompositeBoard.mask_id += 1
-                CompositeBoard.mask_images[CompositeBoard.mask_id] = self.current_img
-            else:
-                self.show_image(self.img_path)
+            CompositeBoard.holder[CompositeBoard.original_mask_id] = self.current_img
            
-    def get_key_from_mask_images(self):
-        keys = [k for k, v in CompositeBoard.mask_images.items() \
+    def get_key_from_holder(self):
+        keys = [k for k, v in CompositeBoard.holder.items() \
             if v == self.current_img]
         if keys:
             return keys[0]
@@ -247,6 +250,7 @@ class CoverImageCanvas(CompositeBoard):
             base = self.draw_shape()
             self.current_img = self.get_display_image()
             self.current_img.putalpha(base)
+            CompositeBoard.holder[CompositeBoard.cropped_image_id] = self.current_img
             self.create_photo_image()
             self.vertices.clear()
 
@@ -270,7 +274,7 @@ class CoverImageCanvas(CompositeBoard):
     def drag_init(self, event):
         print(f'Drag_start: {event.widget}')
         BaseBoard.drag_start = True
-        if key := self.get_key_from_mask_images():
+        if key := self.get_key_from_holder():
             data = (key,)
         else:
             data = (self.img_path, )
@@ -287,7 +291,7 @@ class BaseImageCanvas(CompositeBoard):
     def __init__(self, master, width_var, height_var):
         super().__init__(master, width_var, height_var)
         self.composite_images = []    
-        self.mask_key = None
+        self.holder_id = None
         self.create_bind()
 
     def create_bind(self):
@@ -298,14 +302,20 @@ class BaseImageCanvas(CompositeBoard):
         self.dnd_bind('<<Drop>>', self.drop)
 
     def show_composite_image(self):
-        if len(self.composite_images) == 2 and self.mask_key:
-            first_img = Image.open(self.composite_images[0])
-            second_img = Image.open(self.composite_images[1]).resize(first_img.size)
-            mask = CompositeBoard.mask_images[self.mask_key].resize(first_img.size)
-            self.current_img = Image.composite(first_img, second_img, mask)
-            self.create_photo_image()
-            self.composite_images = [] 
-            self.mask_key = None
+        if len(self.composite_images) == 2:
+            if self.holder_id and self.holder_id <= CompositeBoard.original_mask_id:
+                first_img = Image.open(self.composite_images[0])
+                second_img = Image.open(self.composite_images[1]).resize(first_img.size)
+                mask = CompositeBoard.holder[self.holder_id].resize(first_img.size)
+                self.current_img = Image.composite(first_img, second_img, mask)
+                self.create_photo_image()
+                self.composite_images = [] 
+                self.holder_id = None
+
+    def clear_image(self):
+        self.delete('all')
+        self.composite_images = [] 
+        self.holder_id = None
 
     def drop_enter(self, event):
         event.widget.focus_force()
@@ -323,8 +333,8 @@ class BaseImageCanvas(CompositeBoard):
         print('Dropped:', event.widget)
         if BaseBoard.drag_start:
             if re.fullmatch('[0-9]+', event.data):
-                self.mask_key = int(event.data)
-                self.current_img = CompositeBoard.mask_images[self.mask_key]
+                self.holder_id = int(event.data)
+                self.current_img = CompositeBoard.holder[self.holder_id]
                 self.create_photo_image()
                 self.display_image_size(*self.current_img.size)
             BaseBoard.drag_start = False
