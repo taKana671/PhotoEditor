@@ -8,6 +8,7 @@ from tkinter import filedialog, messagebox
 import cv2
 from PIL import Image, ImageTk
 
+from config import BOARD_W, BOARD_H
 
 class InvalidSizeError(Exception):
     pass
@@ -22,7 +23,7 @@ class BaseBoard(tk.Canvas):
         self.display_img = None
         self.width_var = width_var
         self.height_var = height_var
-        super().__init__(master, width=600, height=500, bg='snow')
+        super().__init__(master, width=BOARD_W, height=BOARD_H, bg='snow')
 
     def display_image_size(self, width, height):
         self.width_var.set(width)
@@ -36,11 +37,11 @@ class BaseBoard(tk.Canvas):
         
     def get_display_image(self):
         w, h = self.current_img.size
-        if w <= 600 and h <= 500:
+        if w <= BOARD_W and h <= BOARD_H:
             return self.current_img
         else:
             img = self.current_img.copy()
-            img.thumbnail((600, 500), Image.BICUBIC)
+            img.thumbnail((BOARD_W, BOARD_H), Image.BICUBIC)
             return img
 
     def is_image_file(self, path):
@@ -88,7 +89,7 @@ class BaseBoard(tk.Canvas):
         else:
             cv2.imwrite(Path(save_path).as_posix(), self.current_img)
 
-    def get_cv_aspect(self, width=600, height=500):
+    def get_cv_aspect(self, width=BOARD_W, height=BOARD_H):
         h, w = self.current_img.shape[:2]
         aspect = w / h
         if width / height >= aspect:

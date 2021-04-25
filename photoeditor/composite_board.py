@@ -205,7 +205,7 @@ class CoverImageCanvas(CompositeBoard):
         return ((left_top_x, left_top_y), (right_bottom_x, right_bottom_y))
 
     def sort_multi_vertices(self, vertices):
-        x_center = sum(x[0] for x in vertices) / len(vertices)
+        # x_center = sum(x[0] for x in vertices) / len(vertices)
         y_center = sum(x[1] for x in vertices) / len(vertices)
         above = [x for x in vertices if x[1] <= y_center]
         below = [x for x in vertices if x[1] > y_center]
@@ -348,12 +348,12 @@ class BaseImageCanvas(CompositeBoard):
                 self.composite_images.append(self.img_path)
         self.show_composite_image()
 
-if __name__ == '__main__':
-    app = TkinterDnD.Tk()
-    # app.geometry('650x500')
-    # app.withdraw()
-    app.title('Image Editor')
-    window = EditorBoard(app)
-    app.protocol('WM_DELETE_WINDOW', window.close)
-    app.mainloop()
+# if __name__ == '__main__':
+#     app = TkinterDnD.Tk()
+#     # app.geometry('650x500')
+#     # app.withdraw()
+#     app.title('Image Editor')
+#     window = EditorBoard(app)
+#     app.protocol('WM_DELETE_WINDOW', window.close)
+#     app.mainloop()
 

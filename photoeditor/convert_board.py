@@ -257,7 +257,7 @@ class ConvertImageCanvas(ConvertBoard):
         z = img.reshape((-1, 3))
         z = np.float32(z)
         criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 10, 1.0)
-        ret, label, center = cv2.kmeans(z, k, None, criteria, 10, cv2.KMEANS_RANDOM_CENTERS)
+        _, label, center = cv2.kmeans(z, k, None, criteria, 10, cv2.KMEANS_RANDOM_CENTERS)
         center = np.uint8(center)
         res = center[label.flatten()]
         return res.reshape((img.shape))
@@ -265,7 +265,7 @@ class ConvertImageCanvas(ConvertBoard):
     def show_pixel_art(self, alpha=2, k=4):
         if self.img_path:
             img = cv2.imread(self.img_path.as_posix())
-            h, w, ch = img.shape
+            h, w, _ = img.shape
             img = cv2.resize(img, (int(w*alpha), int(h*alpha)))
             img = cv2.resize(img, (w, h), interpolation=cv2.INTER_NEAREST)
             self.current_img = self.sub_color(img, k)
@@ -286,7 +286,7 @@ class ConvertImageCanvas(ConvertBoard):
             scale, angle = self.get_scale_and_angle()
             if scale is not None and angle is not None:
                 img = cv2.imread(self.img_path.as_posix())
-                h, w, ch = img.shape
+                h, w, _ = img.shape
                 mat = cv2.getRotationMatrix2D((w / 2, h / 2), angle, scale)
                 self.current_img = cv2.warpAffine(
                     img, mat, (w, h), borderMode=cv2.BORDER_WRAP)
@@ -299,7 +299,7 @@ class ConvertImageCanvas(ConvertBoard):
             if scale is not None and angle is not None:
                 img = cv2.imread(self.img_path.as_posix())
                 dst = img // 4
-                h, w, ch = img.shape
+                h, w, _ = img.shape
                 mat = cv2.getRotationMatrix2D((w / 2, h / 2), angle, scale)
                 self.current_img = cv2.warpAffine(
                     img, mat, (w, h), borderMode=cv2.BORDER_TRANSPARENT, dst=dst)
