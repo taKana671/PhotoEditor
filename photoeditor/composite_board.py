@@ -2,8 +2,7 @@ import re
 import tkinter as tk
 import tkinter.ttk as ttk
 from pathlib import Path
-from PIL import Image, ImageDraw, ImageFilter, ImageTk
-from tkinter import messagebox
+from PIL import Image, ImageDraw, ImageFilter
 
 import numpy as np
 from TkinterDnD2 import *
@@ -37,8 +36,8 @@ class EditorBoard(ttk.Frame):
         """
         self.cover_image_canvas = CoverImageCanvas(
             base_frame, self.vertices, self.blur_bool, self.rectangle_bool)
-        self.cover_image_canvas.grid(row=0, column=0, padx=(5, 1),
-            pady=5, sticky=(tk.W, tk.E, tk.N, tk.S))
+        self.cover_image_canvas.grid(
+            row=0, column=0, padx=(5, 1), pady=5, sticky=(tk.W, tk.E, tk.N, tk.S))
         self.cover_image_canvas.bind(
             '<ButtonRelease-3>', self.create_vertices)
 
@@ -47,13 +46,13 @@ class EditorBoard(ttk.Frame):
         """
         self.base_image_canvas = BaseImageCanvas(
             base_frame, self.width_var, self.height_var)
-        self.base_image_canvas.grid(row=0, column=1, padx=(1, 5),
-            pady=5, sticky=(tk.W, tk.E, tk.N, tk.S))
-    
+        self.base_image_canvas.grid(
+            row=0, column=1, padx=(1, 5), pady=5, sticky=(tk.W, tk.E, tk.N, tk.S))
+
     def create_vertices(self, event):
-        """Get the coordinates of where an image displayed 
-           on the left canvas was right-click, and create 
-           white ovals there. 
+        """Get the coordinates of where an image displayed
+           on the left canvas was right-click, and create
+           white ovals there.
         """
         if self.cover_image_canvas.display_img:
             img_width = self.cover_image_canvas.display_img.width()
@@ -61,7 +60,7 @@ class EditorBoard(ttk.Frame):
             x, y = event.x, event.y
             if x <= img_width and y <= img_height:
                 id = self.cover_image_canvas.create_oval(
-                    x, y, x+7, y+7, outline='white', fill='white')
+                    x, y, x + 7, y + 7, outline='white', fill='white')
                 self.vertices[id] = (x, y)
 
     def delete_vertices(self):
@@ -73,8 +72,8 @@ class EditorBoard(ttk.Frame):
 
     def create_controller(self, base_frame):
         controller_frame = tk.Frame(base_frame)
-        controller_frame.grid(row=1, column=0, columnspan=2, 
-            sticky=(tk.W, tk.E, tk.N, tk.S))
+        controller_frame.grid(
+            row=1, column=0, columnspan=2, sticky=(tk.W, tk.E, tk.N, tk.S))
         # save
         height_entry = ttk.Entry(controller_frame, width=10, textvariable=self.height_var)
         height_entry.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 5))
@@ -84,37 +83,35 @@ class EditorBoard(ttk.Frame):
         width_entry.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 1))
         width_label = ttk.Label(controller_frame, text='W:')
         width_label.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 1))
-        save_button = ttk.Button(controller_frame, text='Save', 
-            command=self.base_image_canvas.save_with_pil)
+        save_button = ttk.Button(
+            controller_frame, text='Save', command=self.base_image_canvas.save_with_pil)
         save_button.pack(side=tk.RIGHT, pady=(3, 10), padx=(10, 1))
-        clear_button = ttk.Button(controller_frame, text='Clear', 
-            command=self.base_image_canvas.clear_image)
+        clear_button = ttk.Button(
+            controller_frame, text='Clear', command=self.base_image_canvas.clear_image)
         clear_button.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 1))
         # create mask
-        reset_button = ttk.Button(controller_frame, text='Reset', 
-            command=self.delete_vertices)
+        reset_button = ttk.Button(
+            controller_frame, text='Reset', command=self.delete_vertices)
         reset_button.pack(side=tk.LEFT, pady=(3, 10), padx=(5, 1))
-        create_mask_button = ttk.Button(controller_frame, text='Create', 
-            command=self.cover_image_canvas.create_new_mask)
+        create_mask_button = ttk.Button(
+            controller_frame, text='Create', command=self.cover_image_canvas.create_new_mask)
         create_mask_button.pack(side=tk.LEFT, pady=(3, 10), padx=(1, 1))
-        check_rectangle = ttk.Checkbutton(controller_frame, text='Rectangle', variable=self.rectangle_bool,
+        check_rectangle = ttk.Checkbutton(
+            controller_frame, text='Rectangle', variable=self.rectangle_bool,
             onvalue=True, offvalue=False)
         check_rectangle.pack(side=tk.LEFT, pady=(3, 10), padx=(1, 1))
-        self.blur_bool.set(True)        
-        check_blur = ttk.Checkbutton(controller_frame, text='Blur', variable=self.blur_bool,
-            onvalue=True, offvalue=False)
+        self.blur_bool.set(True)
+        check_blur = ttk.Checkbutton(
+            controller_frame, text='Blur', variable=self.blur_bool, onvalue=True, offvalue=False)
         check_blur.pack(side=tk.LEFT, pady=(3, 10), padx=(1, 1))
         # change mask
-        mask_button = ttk.Button(controller_frame, text='Change', 
-            command=self.cover_image_canvas.toggle_mask)
+        mask_button = ttk.Button(
+            controller_frame, text='Change', command=self.cover_image_canvas.toggle_mask)
         mask_button.pack(side=tk.LEFT, pady=(3, 10), padx=(1, 1))
         # crop
-        crop_button = ttk.Button(controller_frame, text='Crop',
-            command=self.cover_image_canvas.crop_image)
+        crop_button = ttk.Button(
+            controller_frame, text='Crop', command=self.cover_image_canvas.crop_image)
         crop_button.pack(side=tk.LEFT, pady=(3, 10), padx=(10, 1))
-        save_cropped = ttk.Button(controller_frame, text='Save cropped',
-            command='')
-        save_cropped.pack(side=tk.LEFT, pady=(3, 10), padx=(1, 1))
 
 
 class CompositeBoard(BaseBoard):
@@ -133,7 +130,7 @@ class CompositeBoard(BaseBoard):
         self.img_path = Path(path)
         self.create_photo_image()
 
-    
+
 class CoverImageCanvas(CompositeBoard):
     """Left canvas to create masks
     """
@@ -164,7 +161,7 @@ class CoverImageCanvas(CompositeBoard):
             return np.tile(np.linspace(start, stop, height), (width, 1)).T
 
     def get_3d_gradient(self, start_tuple, stop_tuple, is_horizontal_tuple,
-            width=600, height=500):
+                        width=600, height=500):
         array = np.zeros((height, width, len(start_tuple)), dtype=np.float)
         for i, (start, stop, is_horizontal) in enumerate(zip(start_tuple, stop_tuple, is_horizontal_tuple)):
             array[:, :, i] = self.get_2d_gradient(start, stop, width, height, is_horizontal)
@@ -212,7 +209,7 @@ class CoverImageCanvas(CompositeBoard):
         above.sort(reverse=True)
         below.sort()
         return tuple(above + below)
-    
+
     def draw_shape(self):
         base = Image.new(
             'L', (self.display_img.width(), self.display_img.height()), 0)
@@ -236,7 +233,7 @@ class CoverImageCanvas(CompositeBoard):
             self.create_photo_image()
             self.vertices.clear()
             CompositeBoard.holder[CompositeBoard.original_mask_id] = self.current_img
-           
+
     def get_key_from_holder(self):
         keys = [k for k, v in CompositeBoard.holder.items() \
             if v == self.current_img]
@@ -270,7 +267,7 @@ class CoverImageCanvas(CompositeBoard):
         print(f'Drop: {event.widget}')
         if self.is_image_file(event.data):
             self.show_image(event.data)
-       
+
     def drag_init(self, event):
         print(f'Drag_start: {event.widget}')
         BaseBoard.drag_start = True
@@ -290,7 +287,7 @@ class BaseImageCanvas(CompositeBoard):
 
     def __init__(self, master, width_var, height_var):
         super().__init__(master, width_var, height_var)
-        self.composite_images = []    
+        self.composite_images = []
         self.holder_id = None
         self.create_bind()
 
@@ -309,12 +306,12 @@ class BaseImageCanvas(CompositeBoard):
                 mask = CompositeBoard.holder[self.holder_id].resize(first_img.size)
                 self.current_img = Image.composite(first_img, second_img, mask)
                 self.create_photo_image()
-                self.composite_images = [] 
+                self.composite_images = []
                 self.holder_id = None
 
     def clear_image(self):
         self.delete('all')
-        self.composite_images = [] 
+        self.composite_images = []
         self.holder_id = None
 
     def drop_enter(self, event):
@@ -347,13 +344,3 @@ class BaseImageCanvas(CompositeBoard):
                     self.composite_images = []
                 self.composite_images.append(self.img_path)
         self.show_composite_image()
-
-# if __name__ == '__main__':
-#     app = TkinterDnD.Tk()
-#     # app.geometry('650x500')
-#     # app.withdraw()
-#     app.title('Image Editor')
-#     window = EditorBoard(app)
-#     app.protocol('WM_DELETE_WINDOW', window.close)
-#     app.mainloop()
-

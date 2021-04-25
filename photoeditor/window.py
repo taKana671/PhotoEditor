@@ -1,7 +1,5 @@
 import tkinter as tk
 import tkinter.ttk as ttk
-from PIL import Image, ImageTk
-from tkinter import filedialog
 
 from TkinterDnD2 import *
 
@@ -28,7 +26,7 @@ class Window(ttk.Frame):
         board_frame = ttk.Frame(base_frame)
         board_frame.pack(side=tk.BOTTOM, fill=tk.BOTH, expand=True)
         for name, module in zip((CONNECT, COMPOSITE, CONVERT),
-                (connect_board, composite_board, convert_board)):
+                                (connect_board, composite_board, convert_board)):
             frame = ttk.Frame(board_frame)
             frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
             board = module.EditorBoard(frame)
@@ -72,10 +70,3 @@ if __name__ == '__main__':
     # window = Window(app)
     # app.protocol('WM_DELETE_WINDOW', window.close)
     # app.mainloop()
-
-
-
-
-
-
-

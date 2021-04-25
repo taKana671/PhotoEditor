@@ -10,6 +10,7 @@ from PIL import Image, ImageTk
 
 from config import BOARD_W, BOARD_H
 
+
 class InvalidSizeError(Exception):
     pass
 
@@ -17,7 +18,7 @@ class InvalidSizeError(Exception):
 class BaseBoard(tk.Canvas):
 
     drag_start = False
-   
+
     def __init__(self, master, width_var=None, height_var=None):
         self.current_img = None
         self.display_img = None
@@ -28,13 +29,13 @@ class BaseBoard(tk.Canvas):
     def display_image_size(self, width, height):
         self.width_var.set(width)
         self.height_var.set(height)
-     
+
     def create_photo_image(self):
         display_img = self.get_display_image()
         self.delete('all')
         self.display_img = ImageTk.PhotoImage(display_img)
         self.create_image(0, 0, image=self.display_img, anchor=tk.NW)
-        
+
     def get_display_image(self):
         w, h = self.current_img.size
         if w <= BOARD_W and h <= BOARD_H:

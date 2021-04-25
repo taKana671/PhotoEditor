@@ -36,20 +36,20 @@ class EditorBoard(ttk.Frame):
 
     def create_original_image_canvas(self, base_frame):
         self.original_image_canvas = OriginalImageCanvas(base_frame)
-        self.original_image_canvas.grid(row=0, column=0, padx=(5, 1),
-            pady=5, sticky=(tk.W, tk.E, tk.N, tk.S))
-           
+        self.original_image_canvas.grid(
+            row=0, column=0, padx=(5, 1), pady=5, sticky=(tk.W, tk.E, tk.N, tk.S))
+
     def create_convert_image_canvas(self, base_frame):
-        self.convert_image_canvas = ConvertImageCanvas(base_frame,
-            self.width_var, self.height_var, self.noise_bool, self.light_bool, 
+        self.convert_image_canvas = ConvertImageCanvas(
+            base_frame, self.width_var, self.height_var, self.noise_bool, self.light_bool,
             self.contrast_bool, self.scale_double, self.angle_int)
-        self.convert_image_canvas.grid(row=0, column=1, padx=(1, 5),
-            pady=5, sticky=(tk.W, tk.E, tk.N, tk.S))
+        self.convert_image_canvas.grid(
+            row=0, column=1, padx=(1, 5), pady=5, sticky=(tk.W, tk.E, tk.N, tk.S))
 
     def create_controller(self, base_frame):
         controller_frame = tk.Frame(base_frame)
-        controller_frame.grid(row=1, column=0, columnspan=2, 
-            sticky=(tk.W, tk.E, tk.N, tk.S))
+        controller_frame.grid(
+            row=1, column=0, columnspan=2, sticky=(tk.W, tk.E, tk.N, tk.S))
         # save
         height_entry = ttk.Entry(controller_frame, width=10, textvariable=self.height_var)
         height_entry.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 5))
@@ -59,34 +59,34 @@ class EditorBoard(ttk.Frame):
         width_entry.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 1))
         width_label = ttk.Label(controller_frame, text='W:')
         width_label.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 1))
-        save_button = ttk.Button(controller_frame, text='Save image', 
-            command=self.convert_image_canvas.save_open_cv)
-        save_button.pack(side=tk.RIGHT, pady=(3, 10), padx=(10, 1))
-        # gray
-        gray_button = ttk.Button(controller_frame, text='Gray', 
-            command=self.convert_image_canvas.show_gray_image)
+        save_button = ttk.Button(
+            controller_frame, text='Save image', command=self.convert_image_canvas.save_open_cv)
+        save_button.pack(side=tk.RIGHT, pady=(3, 10), padx=(20, 1))
         # sepia
-        gray_button.pack(side=tk.RIGHT, pady=(3, 10), padx=(10, 1))
-        check_noise = ttk.Checkbutton(controller_frame, text='Noise', variable=self.noise_bool,
-            onvalue=True, offvalue=False)
+        check_noise = ttk.Checkbutton(
+            controller_frame, text='Noise', variable=self.noise_bool, onvalue=True, offvalue=False)
         check_noise.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 1))
-        check_contrast = ttk.Checkbutton(controller_frame, text='Contrast', variable=self.contrast_bool,
-            onvalue=True, offvalue=False)
+        check_contrast = ttk.Checkbutton(
+            controller_frame, text='Contrast', variable=self.contrast_bool, onvalue=True, offvalue=False)
         check_contrast.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 1))
-        check_light = ttk.Checkbutton(controller_frame, text='Light', variable=self.light_bool,
-            onvalue=True, offvalue=False)
+        check_light = ttk.Checkbutton(
+            controller_frame, text='Light', variable=self.light_bool, onvalue=True, offvalue=False)
         check_light.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 1))
-        sepia_button = ttk.Button(controller_frame, text='Sepia', 
-            command=self.convert_image_canvas.show_sepia_image)
-        sepia_button.pack(side=tk.RIGHT, pady=(3, 10), padx=(10, 1))
+        sepia_button = ttk.Button(
+            controller_frame, text='Sepia', command=self.convert_image_canvas.show_sepia_image)
+        sepia_button.pack(side=tk.RIGHT, pady=(3, 10), padx=(20, 1))
+        # gray
+        gray_button = ttk.Button(
+            controller_frame, text='Gray', command=self.convert_image_canvas.show_gray_image)
+        gray_button.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 1))
         # image like animation
-        anime_button = ttk.Button(controller_frame, text='Anime', 
-            command=self.convert_image_canvas.show_image_like_animation)
-        anime_button.pack(side=tk.RIGHT, pady=(3, 10), padx=(10, 1))
+        anime_button = ttk.Button(
+            controller_frame, text='Anime', command=self.convert_image_canvas.show_image_like_animation)
+        anime_button.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 1))
         # image like pixel art
-        pixel_button = ttk.Button(controller_frame, text='Pixel', 
-            command=self.convert_image_canvas.show_pixel_art)
-        pixel_button.pack(side=tk.RIGHT, pady=(3, 10), padx=(10, 1))
+        pixel_button = ttk.Button(
+            controller_frame, text='Pixel', command=self.convert_image_canvas.show_pixel_art)
+        pixel_button.pack(side=tk.RIGHT, pady=(3, 10), padx=(20, 1))
         # rotate
         scale_entry = ttk.Entry(controller_frame, width=5, textvariable=self.scale_double)
         scale_entry.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 1))
@@ -98,11 +98,11 @@ class EditorBoard(ttk.Frame):
         angle_label.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 1))
         self.scale_double.set(0.5)
         self.angle_int.set(45)
-        repeat_button = ttk.Button(controller_frame, text='Repeat', 
-            command=self.convert_image_canvas.show_repeated_image)
+        repeat_button = ttk.Button(
+            controller_frame, text='Repeat', command=self.convert_image_canvas.show_repeated_image)
         repeat_button.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 1))
-        rotate_button = ttk.Button(controller_frame, text='Rotate', 
-            command=self.convert_image_canvas.show_rotated_image)
+        rotate_button = ttk.Button(
+            controller_frame, text='Rotate', command=self.convert_image_canvas.show_rotated_image)
         rotate_button.pack(side=tk.RIGHT, pady=(3, 10), padx=(10, 1))
 
 
@@ -114,9 +114,9 @@ class ConvertBoard(BaseBoard):
     def show_image(self, path):
         self.current_img = cv2.imread(path)
         self.img_path = Path(path)
-        img_rgb  = cv2.cvtColor(self.current_img, cv2.COLOR_BGR2RGB)
+        img_rgb = cv2.cvtColor(self.current_img, cv2.COLOR_BGR2RGB)
         self.create_photo_image(img_rgb)
-        
+
     def create_photo_image(self, img_rgb):
         h, w = self.current_img.shape[:2]
         img_pil = Image.fromarray(img_rgb)
@@ -127,7 +127,7 @@ class ConvertBoard(BaseBoard):
             self.display_img = ImageTk.PhotoImage(img_pil.resize((nw, nh)))
         self.create_image(0, 0, image=self.display_img, anchor=tk.NW)
 
-    
+
 class OriginalImageCanvas(ConvertBoard):
     """The left canvas
     """
@@ -161,10 +161,10 @@ class OriginalImageCanvas(ConvertBoard):
         print(f'Drop: {event.widget}')
         if self.is_image_file(event.data):
             self.show_image(event.data)
-       
+
     def drag_init(self, event):
-        """Set BaseBoard.drag_start to True, 
-           when drag starts from the left canvas.  
+        """Set BaseBoard.drag_start to True,
+           when drag starts from the left canvas.
         """
         print(f'Drag_start: {event.widget}')
         BaseBoard.drag_start = True
@@ -211,7 +211,7 @@ class ConvertImageCanvas(ConvertBoard):
         r = np.sqrt(xx ** 2 + yy ** 2)
         gainmap = gain_params * r + 1
         return np.clip(img * gainmap, 0., 255)
-    
+
     def superimpose_noise(self, gray):
         h, w = gray.shape
         gauss = np.random.normal(0, 40, (h, w)).reshape(h, w)
@@ -266,7 +266,7 @@ class ConvertImageCanvas(ConvertBoard):
         if self.img_path:
             img = cv2.imread(self.img_path.as_posix())
             h, w, _ = img.shape
-            img = cv2.resize(img, (int(w*alpha), int(h*alpha)))
+            img = cv2.resize(img, (int(w * alpha), int(h * alpha)))
             img = cv2.resize(img, (w, h), interpolation=cv2.INTER_NEAREST)
             self.current_img = self.sub_color(img, k)
             img_rgb = cv2.cvtColor(self.current_img, cv2.COLOR_BGR2RGB)
@@ -280,7 +280,7 @@ class ConvertImageCanvas(ConvertBoard):
             return None, None
         else:
             return scale, angle
-    
+
     def show_repeated_image(self):
         if self.img_path:
             scale, angle = self.get_scale_and_angle()
@@ -319,22 +319,11 @@ class ConvertImageCanvas(ConvertBoard):
         print(f'Drop_Leave {event.widget}')
 
     def drop(self, event):
-        """Display image, only when the imaged was 
-           dragged from the left canvas. 
+        """Display image, only when the imaged was
+           dragged from the left canvas.
         """
         print('Dropped:', event.widget)
         if BaseBoard.drag_start:
             self.show_image(event.data)
             self.display_image_size(*self.current_img.shape[:-1])
             BaseBoard.drag_start = False
-
-
-if __name__ == '__main__':
-    app = TkinterDnD.Tk()
-    # app.geometry('650x500')
-    # app.withdraw()
-    app.title('Image Editor')
-    window = EditorBoard(app)
-    app.protocol('WM_DELETE_WINDOW', window.close)
-    app.mainloop()
-
