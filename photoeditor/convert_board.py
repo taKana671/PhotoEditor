@@ -9,59 +9,40 @@ from scipy.interpolate import splrep, splev
 from TkinterDnD2 import *
 
 from base_board import BaseBoard
+from board_window import BoardWindow
 
 
-class EditorBoard(ttk.Frame):
+class EditorBoard(BoardWindow):
 
-    def __init__(self, master):
-        super().__init__(master)
-        self.create_variables()
-        self.create_ui()
-
-    def create_variables(self):
-        self.width_var = tk.StringVar()
-        self.height_var = tk.StringVar()
+    def create_board_variables(self):
         self.noise_bool = tk.BooleanVar()
         self.light_bool = tk.BooleanVar()
         self.contrast_bool = tk.BooleanVar()
         self.angle_int = tk.IntVar()
         self.scale_double = tk.DoubleVar()
 
-    def create_ui(self):
-        base_frame = tk.Frame(self.master)
-        base_frame.pack(fill=tk.BOTH, expand=True)
-        self.create_original_image_canvas(base_frame)
-        self.create_convert_image_canvas(base_frame)
-        self.create_controller(base_frame)
-
-    def create_original_image_canvas(self, base_frame):
-        self.original_image_canvas = OriginalImageCanvas(base_frame)
-        self.original_image_canvas.grid(
+    def create_left_canvas(self, base_frame):
+        self.left_canvas = LeftCanvas(base_frame)
+        self.left_canvas.grid(
             row=0, column=0, padx=(5, 1), pady=5, sticky=(tk.W, tk.E, tk.N, tk.S))
 
-    def create_convert_image_canvas(self, base_frame):
-        self.convert_image_canvas = ConvertImageCanvas(
+    def create_right_canvas(self, base_frame):
+        self.right_canvas = RightCanvas(
             base_frame, self.width_var, self.height_var, self.noise_bool, self.light_bool,
             self.contrast_bool, self.scale_double, self.angle_int)
-        self.convert_image_canvas.grid(
+        self.right_canvas.grid(
             row=0, column=1, padx=(1, 5), pady=5, sticky=(tk.W, tk.E, tk.N, tk.S))
 
     def create_controller(self, base_frame):
         controller_frame = tk.Frame(base_frame)
         controller_frame.grid(
             row=1, column=0, columnspan=2, sticky=(tk.W, tk.E, tk.N, tk.S))
-        # save
-        height_entry = ttk.Entry(controller_frame, width=10, textvariable=self.height_var)
-        height_entry.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 5))
-        height_label = ttk.Label(controller_frame, text='H:')
-        height_label.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 1))
-        width_entry = ttk.Entry(controller_frame, width=10, textvariable=self.width_var)
-        width_entry.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 1))
-        width_label = ttk.Label(controller_frame, text='W:')
-        width_label.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 1))
-        save_button = ttk.Button(
-            controller_frame, text='Save image', command=self.convert_image_canvas.save_open_cv)
-        save_button.pack(side=tk.RIGHT, pady=(3, 10), padx=(20, 1))
+        self.create_save_widgets(controller_frame, self.right_canvas.save_open_cv)
+        self.create_sepia_widgets(controller_frame)
+        self.create_convert_widgets(controller_frame)
+        self.create_rotate_widgets(controller_frame)
+
+    def create_sepia_widgets(self, controller_frame):
         # sepia
         check_noise = ttk.Checkbutton(
             controller_frame, text='Noise', variable=self.noise_bool, onvalue=True, offvalue=False)
@@ -73,20 +54,24 @@ class EditorBoard(ttk.Frame):
             controller_frame, text='Light', variable=self.light_bool, onvalue=True, offvalue=False)
         check_light.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 1))
         sepia_button = ttk.Button(
-            controller_frame, text='Sepia', command=self.convert_image_canvas.show_sepia_image)
+            controller_frame, text='Sepia', command=self.right_canvas.show_sepia_image)
         sepia_button.pack(side=tk.RIGHT, pady=(3, 10), padx=(20, 1))
+
+    def create_convert_widgets(self, controller_frame):
         # gray
         gray_button = ttk.Button(
-            controller_frame, text='Gray', command=self.convert_image_canvas.show_gray_image)
+            controller_frame, text='Gray', command=self.right_canvas.show_gray_image)
         gray_button.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 1))
         # image like animation
         anime_button = ttk.Button(
-            controller_frame, text='Anime', command=self.convert_image_canvas.show_image_like_animation)
+            controller_frame, text='Anime', command=self.right_canvas.show_image_like_animation)
         anime_button.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 1))
         # image like pixel art
         pixel_button = ttk.Button(
-            controller_frame, text='Pixel', command=self.convert_image_canvas.show_pixel_art)
+            controller_frame, text='Pixel', command=self.right_canvas.show_pixel_art)
         pixel_button.pack(side=tk.RIGHT, pady=(3, 10), padx=(20, 1))
+
+    def create_rotate_widgets(self, controller_frame):
         # rotate
         scale_entry = ttk.Entry(controller_frame, width=5, textvariable=self.scale_double)
         scale_entry.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 1))
@@ -99,11 +84,11 @@ class EditorBoard(ttk.Frame):
         self.scale_double.set(0.5)
         self.angle_int.set(45)
         repeat_button = ttk.Button(
-            controller_frame, text='Repeat', command=self.convert_image_canvas.show_repeated_image)
+            controller_frame, text='Repeat', command=self.right_canvas.show_repeated_image)
         repeat_button.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 1))
         rotate_button = ttk.Button(
-            controller_frame, text='Rotate', command=self.convert_image_canvas.show_rotated_image)
-        rotate_button.pack(side=tk.RIGHT, pady=(3, 10), padx=(10, 1))
+            controller_frame, text='Rotate', command=self.right_canvas.show_rotated_image)
+        rotate_button.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 1))
 
 
 class ConvertBoard(BaseBoard):
@@ -128,8 +113,8 @@ class ConvertBoard(BaseBoard):
         self.create_image(0, 0, image=self.display_img, anchor=tk.NW)
 
 
-class OriginalImageCanvas(ConvertBoard):
-    """The left canvas
+class LeftCanvas(ConvertBoard):
+    """The left canvas to show an original image.
     """
     def __init__(self, master):
         super().__init__(master)
@@ -175,8 +160,8 @@ class OriginalImageCanvas(ConvertBoard):
         print(f'Drag_ended: {event.widget}')
 
 
-class ConvertImageCanvas(ConvertBoard):
-    """The right canvas
+class RightCanvas(ConvertBoard):
+    """The right canvas to show a converted image.
     """
     def __init__(self, master, width_var, height_var, noise_bool,
                  light_bool, contrast_bool, scale_double, angle_int):
