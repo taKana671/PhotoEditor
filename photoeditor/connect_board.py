@@ -7,57 +7,38 @@ from tkinter import messagebox
 from TkinterDnD2 import *
 
 from base_board import BaseBoard, InvalidSizeError
+from board_window import BoardWindow
 
 
-class EditorBoard(ttk.Frame):
+class EditorBoard(BoardWindow):
 
-    def __init__(self, master):
-        super().__init__(master)
-        self.create_variables()
-        self.create_ui()
-
-    def create_variables(self):
-        self.width_var = tk.StringVar()
-        self.height_var = tk.StringVar()
+    def create_board_variables(self):
         self.col_var = tk.StringVar()
         self.row_var = tk.StringVar()
         self.radio_bool = tk.BooleanVar()
 
-    def create_ui(self):
-        base_frame = tk.Frame(self.master)
-        base_frame.pack(fill=tk.BOTH, expand=True)
-        self.create_original_image_canvas(base_frame)
-        self.create_connected_image_canvas(base_frame)
-        self.create_controller(base_frame)
-
-    def create_original_image_canvas(self, base_frame):
-        self.original_image_canvas = OriginalImageCanvas(base_frame)
-        self.original_image_canvas.grid(
+    def create_left_canvas(self, base_frame):
+        self.left_canvas = LeftCanvas(base_frame)
+        self.left_canvas.grid(
             row=0, column=0, padx=(5, 1), pady=5, sticky=(tk.W, tk.E, tk.N, tk.S))
 
-    def create_connected_image_canvas(self, base_frame):
-        self.connected_image_canvas = ConnectedImageCanvas(
+    def create_right_canvas(self, base_frame):
+        self.right_canvas = RightCanvas(
             base_frame, self.width_var, self.height_var, self.col_var, self.row_var, self.radio_bool)
-        self.connected_image_canvas.grid(
+        self.right_canvas.grid(
             row=0, column=1, padx=(1, 5), pady=5, sticky=(tk.W, tk.E, tk.N, tk.S))
 
     def create_controller(self, base_frame):
         controller_frame = tk.Frame(base_frame)
         controller_frame.grid(
             row=1, column=0, columnspan=2, sticky=(tk.W, tk.E, tk.N, tk.S))
-        # save image
-        height_entry = ttk.Entry(controller_frame, width=10, textvariable=self.height_var)
-        height_entry.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 5))
-        height_label = ttk.Label(controller_frame, text='H:')
-        height_label.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 1))
-        width_entry = ttk.Entry(controller_frame, width=10, textvariable=self.width_var)
-        width_entry.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 1))
-        width_label = ttk.Label(controller_frame, text='W:')
-        width_label.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 1))
-        save_button = ttk.Button(
-            controller_frame, text='Save', command=self.connected_image_canvas.save_with_pil)
-        save_button.pack(side=tk.RIGHT, pady=(3, 10), padx=(10, 1))
-        # repeat the same image
+        self.create_save_widgets(controller_frame, self.right_canvas.save_with_pil)
+        self.create_repeat_widgets(controller_frame)
+        self.create_connect_widgets(controller_frame)
+        self.create_change_widgets(controller_frame)
+        self.create_clear_widgets(controller_frame)
+
+    def create_repeat_widgets(self, controller_frame):
         height_entry = ttk.Entry(
             controller_frame, width=5, textvariable=self.row_var)
         height_entry.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 10))
@@ -67,10 +48,12 @@ class EditorBoard(ttk.Frame):
             controller_frame, width=5, textvariable=self.col_var)
         width_entry.pack(side=tk.RIGHT, pady=(3, 10), padx=(5, 1))
         concat_repeat_button = ttk.Button(
-            controller_frame, text='Repeat', command=self.connected_image_canvas.show_repeated_image)
+            controller_frame, text='Repeat', command=self.right_canvas.show_repeated_image)
         concat_repeat_button.pack(side=tk.RIGHT, pady=(3, 10))
         self.row_var.set(3)
         self.col_var.set(4)
+
+    def create_connect_widgets(self, controller_frame):
         # connect image
         vertical_radio = ttk.Radiobutton(
             controller_frame, text='Vertical', value=False, variable=self.radio_bool)
@@ -79,19 +62,23 @@ class EditorBoard(ttk.Frame):
             controller_frame, text='Horizontal', value=True, variable=self.radio_bool)
         horizontal_radio.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 1))
         reset_button = ttk.Button(
-            controller_frame, text='Reset', command=self.connected_image_canvas.reset_image)
+            controller_frame, text='Reset', command=self.right_canvas.reset_image)
         reset_button.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 1))
         concat_button = ttk.Button(
-            controller_frame, text='Connect', command=self.connected_image_canvas.show_concat_image)
+            controller_frame, text='Connect', command=self.right_canvas.show_concat_image)
         concat_button.pack(side=tk.RIGHT, pady=(3, 10))
         self.radio_bool.set(True)
+
+    def create_change_widgets(self, controller_frame):
         # change original images
         change_button = ttk.Button(
-            controller_frame, text='Change', command=self.original_image_canvas.change_images)
+            controller_frame, text='Change', command=self.left_canvas.change_images)
         change_button.pack(side=tk.LEFT, pady=(3, 10), padx=(5, 1))
+
+    def create_clear_widgets(self, controller_frame):
         # clear original images
         clear_button = ttk.Button(
-            controller_frame, text='Clear', command=self.original_image_canvas.clear_images)
+            controller_frame, text='Clear', command=self.left_canvas.clear_images)
         clear_button.pack(side=tk.LEFT, pady=(3, 10), padx=1)
 
 
@@ -109,7 +96,7 @@ class ConnectBoard(BaseBoard):
         self.create_photo_image()
 
 
-class OriginalImageCanvas(ConnectBoard):
+class LeftCanvas(ConnectBoard):
 
     def __init__(self, master):
         super().__init__(master)
@@ -173,7 +160,7 @@ class OriginalImageCanvas(ConnectBoard):
         print(f'Drag_ended: {event.widget}')
 
 
-class ConnectedImageCanvas(ConnectBoard):
+class RightCanvas(ConnectBoard):
 
     def __init__(self, master, width_var, height_var, col_var, row_var, radio_bool):
         super().__init__(master, width_var, height_var)
