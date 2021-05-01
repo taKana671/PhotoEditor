@@ -22,11 +22,11 @@ class BoardWindow(ttk.Frame):
         self.create_controller(base_frame)
 
     def create_save_widgets(self, controller_frame, command):
-        height_entry = ttk.Entry(controller_frame, width=10, textvariable=self.height_var)
+        height_entry = ttk.Entry(controller_frame, width=5, textvariable=self.height_var)
         height_entry.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 5))
         height_label = ttk.Label(controller_frame, text='H:')
         height_label.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 1))
-        width_entry = ttk.Entry(controller_frame, width=10, textvariable=self.width_var)
+        width_entry = ttk.Entry(controller_frame, width=5, textvariable=self.width_var)
         width_entry.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 1))
         width_label = ttk.Label(controller_frame, text='W:')
         width_label.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 1))

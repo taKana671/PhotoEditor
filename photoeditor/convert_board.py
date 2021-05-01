@@ -1,3 +1,4 @@
+import math
 import tkinter as tk
 import tkinter.ttk as ttk
 from pathlib import Path
@@ -20,6 +21,7 @@ class EditorBoard(BoardWindow):
         self.contrast_bool = tk.BooleanVar()
         self.angle_int = tk.IntVar()
         self.scale_double = tk.DoubleVar()
+        self.xy_bool = tk.BooleanVar()
 
     def create_left_canvas(self, base_frame):
         self.left_canvas = LeftCanvas(base_frame)
@@ -29,7 +31,7 @@ class EditorBoard(BoardWindow):
     def create_right_canvas(self, base_frame):
         self.right_canvas = RightCanvas(
             base_frame, self.width_var, self.height_var, self.noise_bool, self.light_bool,
-            self.contrast_bool, self.scale_double, self.angle_int)
+            self.contrast_bool, self.scale_double, self.angle_int, self.xy_bool)
         self.right_canvas.grid(
             row=0, column=1, padx=(1, 5), pady=5, sticky=(tk.W, tk.E, tk.N, tk.S))
 
@@ -41,6 +43,7 @@ class EditorBoard(BoardWindow):
         self.create_sepia_widgets(controller_frame)
         self.create_convert_widgets(controller_frame)
         self.create_rotate_widgets(controller_frame)
+        self.create_skew_widgets(controller_frame)
 
     def create_sepia_widgets(self, controller_frame):
         # sepia
@@ -90,6 +93,18 @@ class EditorBoard(BoardWindow):
             controller_frame, text='Rotate', command=self.right_canvas.show_rotated_image)
         rotate_button.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 1))
 
+    def create_skew_widgets(self, controller_frame):
+        y_radio = ttk.Radiobutton(
+            controller_frame, text='Y', value=False, variable=self.xy_bool)
+        y_radio.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 10))
+        x_radio = ttk.Radiobutton(
+            controller_frame, text='X', value=True, variable=self.xy_bool)
+        x_radio.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 1))
+        skew_button = ttk.Button(
+            controller_frame, text='Skew', command=self.right_canvas.show_skewed_image)
+        skew_button.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 1))
+        self.xy_bool.set(True)
+
 
 class ConvertBoard(BaseBoard):
 
@@ -97,6 +112,9 @@ class ConvertBoard(BaseBoard):
         super().__init__(master, width_var, height_var)
 
     def show_image(self, path):
+        """Display an image on a canvas when the image was dropped.
+        """
+        self.delete('all')
         self.current_img = cv2.imread(path)
         self.img_path = Path(path)
         img_rgb = cv2.cvtColor(self.current_img, cv2.COLOR_BGR2RGB)
@@ -164,14 +182,17 @@ class RightCanvas(ConvertBoard):
     """The right canvas to show a converted image.
     """
     def __init__(self, master, width_var, height_var, noise_bool,
-                 light_bool, contrast_bool, scale_double, angle_int):
+                 light_bool, contrast_bool, scale_double, angle_int, xy_bool):
         super().__init__(master, width_var, height_var)
         self.noise_bool = noise_bool
         self.light_bool = light_bool
         self.contrast_bool = contrast_bool
         self.scale_double = scale_double
         self.angle_int = angle_int
+        self.xy_bool = xy_bool
         self.img_path = None
+        self.skew_angles = [15, 30, 45]
+        self.skew_angle_id = -1
         self.create_bind()
 
     def create_bind(self):
@@ -291,6 +312,27 @@ class RightCanvas(ConvertBoard):
                 img_rgb = cv2.cvtColor(self.current_img, cv2.COLOR_BGR2RGB)
                 self.create_photo_image(img_rgb)
 
+    def get_skew_angle(self):
+        self.skew_angle_id += 1
+        if self.skew_angle_id >= len(self.skew_angles):
+            self.skew_angle_id = 0
+        return self.skew_angles[self.skew_angle_id]
+
+    def show_skewed_image(self):
+        if self.img_path:
+            skew_angle = self.get_skew_angle()
+            img = cv2.imread(self.img_path.as_posix())
+            angle = math.tan(math.radians(skew_angle))
+            h, w, _ = img.shape
+            if self.xy_bool.get():
+                mat = np.array([[1, angle, 0], [0, 1, 0]], dtype=np.float32)
+                self.current_img = cv2.warpAffine(img, mat, (int(w + h * angle), h))
+            else:
+                mat = np.array([[1, 0, 0], [angle, 1, 0]], dtype=np.float32)
+                self.current_img = cv2.warpAffine(img, mat, (w, int(h + w * angle)))
+            img_rgb = cv2.cvtColor(self.current_img, cv2.COLOR_BGR2RGB)
+            self.create_photo_image(img_rgb)
+
     def drop_enter(self, event):
         event.widget.focus_force()
         print(f'Drop_enter: {event.widget}')
@@ -309,6 +351,7 @@ class RightCanvas(ConvertBoard):
         """
         print('Dropped:', event.widget)
         if BaseBoard.drag_start:
+            self.skew_angle_id = -1
             self.show_image(event.data)
             self.display_image_size(*self.current_img.shape[:-1])
             BaseBoard.drag_start = False

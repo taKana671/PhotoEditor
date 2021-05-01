@@ -58,15 +58,8 @@ class Window(ttk.Frame):
 
 if __name__ == '__main__':
     app = TkinterDnD.Tk()
-    # app.geometry('650x500')
-    # app.withdraw()
     app.resizable(False, False)
-    app.title('Image Editor')
+    app.title('Photo Editor')
     window = Window(app)
     app.protocol('WM_DELETE_WINDOW', window.close)
     app.mainloop()
-    # app = tk.Tk()
-    # app.title('Image Editor')
-    # window = Window(app)
-    # app.protocol('WM_DELETE_WINDOW', window.close)
-    # app.mainloop()

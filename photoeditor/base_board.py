@@ -8,7 +8,7 @@ from tkinter import filedialog, messagebox
 import cv2
 from PIL import Image, ImageTk
 
-from config import BOARD_W, BOARD_H
+from config import BOARD_W, BOARD_H, EXTENSIONS, FILETYPES
 
 
 class InvalidSizeError(Exception):
@@ -48,7 +48,7 @@ class BaseBoard(tk.Canvas):
     def is_image_file(self, path):
         if os.path.isfile(path):
             _, ext = os.path.splitext(path)
-            if ext in {'.bmp', '.tiff', '.jpg', '.png', '.PNG'}:
+            if ext in EXTENSIONS:
                 return True
         return False
 
@@ -58,7 +58,7 @@ class BaseBoard(tk.Canvas):
             if self.current_img is not None:
                 save_path = filedialog.asksaveasfilename(
                     title='Save as',
-                    filetypes=[('jpg', '*.jpg'), ('png', '*.png')])
+                    filetypes=FILETYPES)
                 if save_path:
                     try:
                         width = int(self.width_var.get())

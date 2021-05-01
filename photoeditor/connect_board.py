@@ -97,6 +97,8 @@ class ConnectBoard(BaseBoard):
 
 
 class LeftCanvas(ConnectBoard):
+    """The left canvas to show images to be connected.
+    """
 
     def __init__(self, master):
         super().__init__(master)
@@ -161,6 +163,8 @@ class LeftCanvas(ConnectBoard):
 
 
 class RightCanvas(ConnectBoard):
+    """The right canvas to show a connected images.
+    """
 
     def __init__(self, master, width_var, height_var, col_var, row_var, radio_bool):
         super().__init__(master, width_var, height_var)
@@ -287,7 +291,7 @@ class RightCanvas(ConnectBoard):
         return((ASK, COPY), (DND_FILES), data)
 
     def drag_end(self, event):
-        """If the current_img was not dropped to the OriginalImageCanvas,
+        """If the current_img was not dropped to the LeftCanvas,
            it's deleted from the ConnectBoard.sources.
         """
         print(f'Drag_ended: {event.widget}')
