@@ -42,7 +42,7 @@ class EditorBoard(BoardWindow):
         self.create_save_widgets(controller_frame, self.right_canvas.save_open_cv)
         self.create_sepia_widgets(controller_frame)
         self.create_convert_widgets(controller_frame)
-        self.create_rotate_widgets(controller_frame)
+        self.change_mode_widgets(controller_frame)
         self.create_skew_widgets(controller_frame)
 
     def create_sepia_widgets(self, controller_frame):
@@ -74,8 +74,7 @@ class EditorBoard(BoardWindow):
             controller_frame, text='Pixel', command=self.right_canvas.show_pixel_art)
         pixel_button.pack(side=tk.RIGHT, pady=(3, 10), padx=(20, 1))
 
-    def create_rotate_widgets(self, controller_frame):
-        # rotate
+    def change_mode_widgets(self, controller_frame):
         scale_entry = ttk.Entry(controller_frame, width=5, textvariable=self.scale_double)
         scale_entry.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 1))
         scale_label = ttk.Label(controller_frame, text='Scale')
@@ -87,11 +86,8 @@ class EditorBoard(BoardWindow):
         self.scale_double.set(0.5)
         self.angle_int.set(45)
         repeat_button = ttk.Button(
-            controller_frame, text='Repeat', command=self.right_canvas.show_repeated_image)
+            controller_frame, text='Change Mode', command=self.right_canvas.change_border_mode)
         repeat_button.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 1))
-        rotate_button = ttk.Button(
-            controller_frame, text='Rotate', command=self.right_canvas.show_rotated_image)
-        rotate_button.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 1))
 
     def create_skew_widgets(self, controller_frame):
         y_radio = ttk.Radiobutton(
@@ -193,6 +189,15 @@ class RightCanvas(ConvertBoard):
         self.img_path = None
         self.skew_angles = [15, 30, 45]
         self.skew_angle_id = -1
+        self.modes = [
+            self.show_border_transparent,
+            lambda mode=cv2.BORDER_CONSTANT: self.show_geometric_image(mode),
+            lambda mode=cv2.BORDER_REPLICATE: self.show_geometric_image(mode),
+            lambda mode=cv2.BORDER_REFLECT: self.show_geometric_image(mode),
+            lambda mode=cv2.BORDER_WRAP: self.show_geometric_image(mode),
+            lambda mode=cv2.BORDER_REFLECT_101: self.show_geometric_image(mode),
+        ]
+        self.mode_id = -1
         self.create_bind()
 
     def create_bind(self):
@@ -287,19 +292,14 @@ class RightCanvas(ConvertBoard):
         else:
             return scale, angle
 
-    def show_repeated_image(self):
-        if self.img_path:
-            scale, angle = self.get_scale_and_angle()
-            if scale is not None and angle is not None:
-                img = cv2.imread(self.img_path.as_posix())
-                h, w, _ = img.shape
-                mat = cv2.getRotationMatrix2D((w / 2, h / 2), angle, scale)
-                self.current_img = cv2.warpAffine(
-                    img, mat, (w, h), borderMode=cv2.BORDER_WRAP)
-                img_rgb = cv2.cvtColor(self.current_img, cv2.COLOR_BGR2RGB)
-                self.create_photo_image(img_rgb)
+    def change_border_mode(self):
+        self.mode_id += 1
+        if self.mode_id >= len(self.modes):
+            self.mode_id = 0
+        func = self.modes[self.mode_id]
+        func()
 
-    def show_rotated_image(self):
+    def show_border_transparent(self):
         if self.img_path:
             scale, angle = self.get_scale_and_angle()
             if scale is not None and angle is not None:
@@ -309,6 +309,18 @@ class RightCanvas(ConvertBoard):
                 mat = cv2.getRotationMatrix2D((w / 2, h / 2), angle, scale)
                 self.current_img = cv2.warpAffine(
                     img, mat, (w, h), borderMode=cv2.BORDER_TRANSPARENT, dst=dst)
+                img_rgb = cv2.cvtColor(self.current_img, cv2.COLOR_BGR2RGB)
+                self.create_photo_image(img_rgb)
+
+    def show_geometric_image(self, mode):
+        if self.img_path:
+            scale, angle = self.get_scale_and_angle()
+            if scale is not None and angle is not None:
+                img = cv2.imread(self.img_path.as_posix())
+                h, w, _ = img.shape
+                mat = cv2.getRotationMatrix2D((w / 2, h / 2), angle, scale)
+                self.current_img = cv2.warpAffine(
+                    img, mat, (w, h), borderMode=mode)
                 img_rgb = cv2.cvtColor(self.current_img, cv2.COLOR_BGR2RGB)
                 self.create_photo_image(img_rgb)
 
