@@ -8,6 +8,7 @@ from TkinterDnD2 import *
 
 from base_board import BaseBoard, InvalidSizeError
 from board_window import BoardWindow
+from config import PADY
 
 
 class EditorBoard(BoardWindow):
@@ -41,15 +42,15 @@ class EditorBoard(BoardWindow):
     def create_repeat_widgets(self, controller_frame):
         height_entry = ttk.Entry(
             controller_frame, width=5, textvariable=self.row_var)
-        height_entry.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 10))
+        height_entry.pack(side=tk.RIGHT, pady=PADY, padx=(1, 10))
         height_label = ttk.Label(controller_frame, text='x')
-        height_label.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 1))
+        height_label.pack(side=tk.RIGHT, pady=PADY, padx=(1, 1))
         width_entry = ttk.Entry(
             controller_frame, width=5, textvariable=self.col_var)
-        width_entry.pack(side=tk.RIGHT, pady=(3, 10), padx=(5, 1))
+        width_entry.pack(side=tk.RIGHT, pady=PADY, padx=(5, 1))
         concat_repeat_button = ttk.Button(
             controller_frame, text='Repeat', command=self.right_canvas.show_repeated_image)
-        concat_repeat_button.pack(side=tk.RIGHT, pady=(3, 10))
+        concat_repeat_button.pack(side=tk.RIGHT, pady=PADY)
         self.row_var.set(3)
         self.col_var.set(4)
 
@@ -57,29 +58,29 @@ class EditorBoard(BoardWindow):
         # connect image
         vertical_radio = ttk.Radiobutton(
             controller_frame, text='Vertical', value=False, variable=self.radio_bool)
-        vertical_radio.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 10))
+        vertical_radio.pack(side=tk.RIGHT, pady=PADY, padx=(1, 10))
         horizontal_radio = ttk.Radiobutton(
             controller_frame, text='Horizontal', value=True, variable=self.radio_bool)
-        horizontal_radio.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 1))
+        horizontal_radio.pack(side=tk.RIGHT, pady=PADY, padx=(1, 1))
         reset_button = ttk.Button(
             controller_frame, text='Reset', command=self.right_canvas.reset_image)
-        reset_button.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 1))
+        reset_button.pack(side=tk.RIGHT, pady=PADY, padx=(1, 1))
         concat_button = ttk.Button(
             controller_frame, text='Connect', command=self.right_canvas.show_concat_image)
-        concat_button.pack(side=tk.RIGHT, pady=(3, 10))
+        concat_button.pack(side=tk.RIGHT, pady=PADY)
         self.radio_bool.set(True)
 
     def create_change_widgets(self, controller_frame):
         # change original images
         change_button = ttk.Button(
             controller_frame, text='Change', command=self.left_canvas.change_images)
-        change_button.pack(side=tk.LEFT, pady=(3, 10), padx=(5, 1))
+        change_button.pack(side=tk.LEFT, pady=PADY, padx=(5, 1))
 
     def create_clear_widgets(self, controller_frame):
         # clear original images
         clear_button = ttk.Button(
             controller_frame, text='Clear', command=self.left_canvas.clear_images)
-        clear_button.pack(side=tk.LEFT, pady=(3, 10), padx=1)
+        clear_button.pack(side=tk.LEFT, pady=PADY, padx=1)
 
 
 class ConnectBoard(BaseBoard):
@@ -92,6 +93,7 @@ class ConnectBoard(BaseBoard):
         super().__init__(master, width_var, height_var)
 
     def show_image(self, path):
+        self.delete('all')
         self.current_img = Image.open(path)
         self.create_photo_image()
 

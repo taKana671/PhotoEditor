@@ -9,6 +9,7 @@ from TkinterDnD2 import *
 
 from base_board import BaseBoard
 from board_window import BoardWindow
+from config import PADY
 
 
 class EditorBoard(BoardWindow):
@@ -74,31 +75,31 @@ class EditorBoard(BoardWindow):
     def create_clear_widgets(self, controller_frame):
         clear_button = ttk.Button(
             controller_frame, text='Clear', command=self.right_canvas.clear_image)
-        clear_button.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 1))
+        clear_button.pack(side=tk.RIGHT, pady=PADY, padx=(1, 1))
 
     def create_mask_widgets(self, controller_frame):
         reset_button = ttk.Button(
             controller_frame, text='Reset', command=self.delete_vertices)
-        reset_button.pack(side=tk.LEFT, pady=(3, 10), padx=(5, 1))
+        reset_button.pack(side=tk.LEFT, pady=PADY, padx=(5, 1))
         create_mask_button = ttk.Button(
             controller_frame, text='Create', command=self.left_canvas.create_new_mask)
-        create_mask_button.pack(side=tk.LEFT, pady=(3, 10), padx=(1, 1))
+        create_mask_button.pack(side=tk.LEFT, pady=PADY, padx=(1, 1))
         check_rectangle = ttk.Checkbutton(
             controller_frame, text='Rectangle', variable=self.rectangle_bool,
             onvalue=True, offvalue=False)
-        check_rectangle.pack(side=tk.LEFT, pady=(3, 10), padx=(1, 1))
+        check_rectangle.pack(side=tk.LEFT, pady=PADY, padx=(1, 1))
         self.blur_bool.set(True)
         check_blur = ttk.Checkbutton(
             controller_frame, text='Blur', variable=self.blur_bool, onvalue=True, offvalue=False)
-        check_blur.pack(side=tk.LEFT, pady=(3, 10), padx=(1, 1))
+        check_blur.pack(side=tk.LEFT, pady=PADY, padx=(1, 1))
         mask_button = ttk.Button(
             controller_frame, text='Change', command=self.left_canvas.toggle_mask)
-        mask_button.pack(side=tk.LEFT, pady=(3, 10), padx=(1, 1))
+        mask_button.pack(side=tk.LEFT, pady=PADY, padx=(1, 1))
 
     def create_crop_widgets(self, controller_frame):
         crop_button = ttk.Button(
             controller_frame, text='Crop', command=self.left_canvas.crop_image)
-        crop_button.pack(side=tk.LEFT, pady=(3, 10), padx=(10, 1))
+        crop_button.pack(side=tk.LEFT, pady=PADY, padx=(10, 1))
 
 
 class CompositeBoard(BaseBoard):
@@ -113,6 +114,7 @@ class CompositeBoard(BaseBoard):
         self.img_path = None
 
     def show_image(self, path):
+        self.delete('all')
         self.current_img = Image.open(path)
         self.img_path = Path(path)
         self.create_photo_image()

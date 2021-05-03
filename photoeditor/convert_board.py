@@ -11,6 +11,7 @@ from TkinterDnD2 import *
 
 from base_board import BaseBoard
 from board_window import BoardWindow
+from config import PADY
 
 
 class EditorBoard(BoardWindow):
@@ -49,56 +50,57 @@ class EditorBoard(BoardWindow):
         # sepia
         check_noise = ttk.Checkbutton(
             controller_frame, text='Noise', variable=self.noise_bool, onvalue=True, offvalue=False)
-        check_noise.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 1))
+        check_noise.pack(side=tk.RIGHT, pady=PADY, padx=(1, 1))
         check_contrast = ttk.Checkbutton(
             controller_frame, text='Contrast', variable=self.contrast_bool, onvalue=True, offvalue=False)
-        check_contrast.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 1))
+        check_contrast.pack(side=tk.RIGHT, pady=PADY, padx=(1, 1))
         check_light = ttk.Checkbutton(
             controller_frame, text='Light', variable=self.light_bool, onvalue=True, offvalue=False)
-        check_light.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 1))
+        check_light.pack(side=tk.RIGHT, pady=PADY, padx=(1, 1))
         sepia_button = ttk.Button(
             controller_frame, text='Sepia', command=self.right_canvas.show_sepia_image)
-        sepia_button.pack(side=tk.RIGHT, pady=(3, 10), padx=(20, 1))
+        sepia_button.pack(side=tk.RIGHT, pady=PADY, padx=(20, 1))
 
     def create_convert_widgets(self, controller_frame):
         # gray
         gray_button = ttk.Button(
             controller_frame, text='Gray', command=self.right_canvas.show_gray_image)
-        gray_button.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 1))
+        gray_button.pack(side=tk.RIGHT, pady=PADY, padx=(1, 1))
         # image like animation
         anime_button = ttk.Button(
             controller_frame, text='Anime', command=self.right_canvas.show_image_like_animation)
-        anime_button.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 1))
+        anime_button.pack(side=tk.RIGHT, pady=PADY, padx=(1, 1))
         # image like pixel art
         pixel_button = ttk.Button(
             controller_frame, text='Pixel', command=self.right_canvas.show_pixel_art)
-        pixel_button.pack(side=tk.RIGHT, pady=(3, 10), padx=(20, 1))
+        pixel_button.pack(side=tk.RIGHT, pady=PADY, padx=(20, 1))
 
     def change_mode_widgets(self, controller_frame):
+        # change BorderMode
         scale_entry = ttk.Entry(controller_frame, width=5, textvariable=self.scale_double)
-        scale_entry.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 1))
+        scale_entry.pack(side=tk.RIGHT, pady=PADY, padx=(1, 1))
         scale_label = ttk.Label(controller_frame, text='Scale')
-        scale_label.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 1))
+        scale_label.pack(side=tk.RIGHT, pady=PADY, padx=(1, 1))
         angle_entry = ttk.Entry(controller_frame, width=5, textvariable=self.angle_int)
-        angle_entry.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 1))
+        angle_entry.pack(side=tk.RIGHT, pady=PADY, padx=(1, 1))
         angle_label = ttk.Label(controller_frame, text='Angle')
-        angle_label.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 1))
+        angle_label.pack(side=tk.RIGHT, pady=PADY, padx=(1, 1))
         self.scale_double.set(0.5)
         self.angle_int.set(45)
         repeat_button = ttk.Button(
             controller_frame, text='Change Mode', command=self.right_canvas.change_border_mode)
-        repeat_button.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 1))
+        repeat_button.pack(side=tk.RIGHT, pady=PADY, padx=(1, 1))
 
     def create_skew_widgets(self, controller_frame):
         y_radio = ttk.Radiobutton(
             controller_frame, text='Y', value=False, variable=self.xy_bool)
-        y_radio.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 10))
+        y_radio.pack(side=tk.RIGHT, pady=PADY, padx=(1, 10))
         x_radio = ttk.Radiobutton(
             controller_frame, text='X', value=True, variable=self.xy_bool)
-        x_radio.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 1))
+        x_radio.pack(side=tk.RIGHT, pady=PADY, padx=(1, 1))
         skew_button = ttk.Button(
             controller_frame, text='Skew', command=self.right_canvas.show_skewed_image)
-        skew_button.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 1))
+        skew_button.pack(side=tk.RIGHT, pady=PADY, padx=(1, 1))
         self.xy_bool.set(True)
 
 

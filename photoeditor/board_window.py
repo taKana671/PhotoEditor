@@ -1,6 +1,7 @@
 import tkinter as tk
 import tkinter.ttk as ttk
 
+from config import PADY
 
 class BoardWindow(ttk.Frame):
 
@@ -23,16 +24,16 @@ class BoardWindow(ttk.Frame):
 
     def create_save_widgets(self, controller_frame, command):
         height_entry = ttk.Entry(controller_frame, width=5, textvariable=self.height_var)
-        height_entry.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 5))
+        height_entry.pack(side=tk.RIGHT, pady=PADY, padx=(1, 5))
         height_label = ttk.Label(controller_frame, text='H:')
-        height_label.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 1))
+        height_label.pack(side=tk.RIGHT, pady=PADY, padx=(1, 1))
         width_entry = ttk.Entry(controller_frame, width=5, textvariable=self.width_var)
-        width_entry.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 1))
+        width_entry.pack(side=tk.RIGHT, pady=PADY, padx=(1, 1))
         width_label = ttk.Label(controller_frame, text='W:')
-        width_label.pack(side=tk.RIGHT, pady=(3, 10), padx=(1, 1))
+        width_label.pack(side=tk.RIGHT, pady=PADY, padx=(1, 1))
         save_button = ttk.Button(
             controller_frame, text='Save', command=command)
-        save_button.pack(side=tk.RIGHT, pady=(3, 10), padx=(20, 1))
+        save_button.pack(side=tk.RIGHT, pady=PADY, padx=(20, 1))
 
     def create_board_variables(self):
         raise NotImplementedError()

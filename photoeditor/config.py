@@ -9,3 +9,5 @@ CONVERT = 'Convert'
 
 EXTENSIONS = {'.bmp', '.tiff', '.jpg', '.png', '.PNG'}
 FILETYPES = [('jpg', '*.jpg'), ('png', '*.png')]
+
+PADY = (3, 10)
