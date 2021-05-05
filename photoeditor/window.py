@@ -6,7 +6,8 @@ from TkinterDnD2 import *
 import composite_board
 import connect_board
 import convert_board
-from config import WINDOW_W, WINDOW_H, CONNECT, COMPOSITE, CONVERT
+import pixelate_board
+from config import WINDOW_W, WINDOW_H, CONNECT, COMPOSITE, CONVERT, PIXELATE
 
 
 class Window(ttk.Frame):
@@ -25,8 +26,8 @@ class Window(ttk.Frame):
     def create_board(self, base_frame):
         board_frame = ttk.Frame(base_frame)
         board_frame.pack(side=tk.BOTTOM, fill=tk.BOTH, expand=True)
-        for name, module in zip((CONNECT, COMPOSITE, CONVERT),
-                                (connect_board, composite_board, convert_board)):
+        for name, module in zip((PIXELATE, CONNECT, COMPOSITE, CONVERT),
+                                (pixelate_board, connect_board, composite_board, convert_board)):
             frame = ttk.Frame(board_frame)
             frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
             board = module.EditorBoard(frame)
@@ -41,11 +42,12 @@ class Window(ttk.Frame):
         menu_frame = ttk.Frame(base_frame)
         menu_frame.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
         self.menu_bool = tk.IntVar()
-        texts = [CONVERT, COMPOSITE, CONNECT]
+        texts = [CONVERT, COMPOSITE, CONNECT, PIXELATE]
         commands = [
             lambda: self.change_boards(CONVERT),
             lambda: self.change_boards(COMPOSITE),
-            lambda: self.change_boards(CONNECT)]
+            lambda: self.change_boards(CONNECT),
+            lambda: self.change_boards(PIXELATE)]
         for num, (text, command) in enumerate(zip(texts, commands), 1):
             radio = ttk.Radiobutton(
                 menu_frame, text=text, value=num, variable=self.menu_bool, command=command)

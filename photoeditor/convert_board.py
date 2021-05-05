@@ -367,5 +367,5 @@ class RightCanvas(ConvertBoard):
         if BaseBoard.drag_start:
             self.skew_angle_id = -1
             self.show_image(event.data)
-            self.display_image_size(*self.current_img.shape[:-1])
+            self.display_image_size(*self.current_img.shape[:-1][::-1])
             BaseBoard.drag_start = False

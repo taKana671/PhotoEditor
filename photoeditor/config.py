@@ -6,6 +6,7 @@ WINDOW_H = 500
 CONNECT = 'Connect'
 COMPOSITE = 'Composite'
 CONVERT = 'Convert'
+PIXELATE = 'Pixelate'
 
 EXTENSIONS = {'.bmp', '.tiff', '.jpg', '.png', '.PNG'}
 FILETYPES = [('jpg', '*.jpg'), ('png', '*.png')]
