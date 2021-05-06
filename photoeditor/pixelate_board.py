@@ -1,6 +1,7 @@
 import math
 import tkinter as tk
 import tkinter.ttk as ttk
+from collections import namedtuple
 from pathlib import Path
 
 import cv2
@@ -14,11 +15,17 @@ from board_window import BoardWindow
 from config import PADY, BOARD_W, BOARD_H
 
 
+Rectangle = namedtuple('Rectangle', 'x y width height')
+
+
 class EditorBoard(BoardWindow):
 
     def __init__(self, master):
         self.rectangle_tag = 'rect'
-        self.rectangle_corners = []
+        self.left_top_x = None
+        self.left_top_y = None
+        self.right_bottom_x = None
+        self.right_bottom_y = None
         super().__init__(master)
 
     def create_board_variables(self):
@@ -91,19 +98,27 @@ class EditorBoard(BoardWindow):
         """Get the left top and right bottom of the rectangle.
         """
         if self.right_canvas.display_img:
-            self.rectangle_corners = \
-                [int(point) for point in self.right_canvas.coords(self.rectangle_tag)]
+            self.left_top_x, self.left_top_y, self.right_bottom_x, self.right_bottom_y = \
+                self.right_canvas.coords(self.rectangle_tag)
 
     def get_rectangle(self):
-        """Returns the rectangle corners.
+        """Returns namedtuple or None.
         """
-        return self.rectangle_corners
+        if all([self.left_top_x, self.left_top_y,
+               self.right_bottom_x, self.right_bottom_y]):
+            width = self.right_bottom_x - self.left_top_x
+            height = self.right_bottom_y - self.left_top_y
+            return Rectangle(self.left_top_x, self.left_top_y, width, height)
+        return None
 
     def clear_rectangle(self):
         """Delete rectangle.
         """
         self.right_canvas.delete(self.rectangle_tag)
-        self.rectangle_corners = []
+        self.left_top_x = None
+        self.left_top_y = None
+        self.right_bottom_x = None
+        self.right_bottom_y = None
 
 
 class PixelateBoard(BaseBoard):
@@ -241,10 +256,17 @@ class RightCanvas(PixelateBoard):
         self.create_photo_image()
 
     def show_pixelated_area(self):
-        if corners := self.get_rectangle():
-            left_top_x, left_top_y, right_bottom_x, right_bottom_y = corners
-            self.current_img = self.get_display_image()
-            self.current_img[left_top_y:right_bottom_y, left_top_x:right_bottom_x] = \
-                self.pixelate(self.current_img[left_top_y:right_bottom_y, left_top_x:right_bottom_x])
+        if rectangle := self.get_rectangle():
+            current_h, current_w = self.current_img.shape[:2]
+            # get magnification ratio
+            scale_x = current_w / self.display_img.width()
+            scale_y = current_h / self.display_img.height()
+            # get x, y, width and height of the self.current_img
+            x = int(rectangle.x * scale_x)
+            y = int(rectangle.y * scale_y)
+            width = int(rectangle.width * scale_x)
+            height = int(rectangle.height * scale_y)
+            self.current_img[y:y + height, x:x + width] = \
+                self.pixelate(self.current_img[y:y + height, x:x + width])
             self.create_photo_image()
             self.clear_rectangle()
