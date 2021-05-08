@@ -72,6 +72,18 @@ class BaseBoard(tk.Canvas):
                         messagebox.showinfo('Info', 'Save successfully.')
         return save_decorator
 
+    def save_gif(save_func):
+        @wraps(save_func)
+        def save_decorator(self):
+            if self.current_img:
+                save_path = filedialog.asksaveasfilename(
+                    title='Save as',
+                    filetypes=[('gif', '*.gif')])
+                if save_path:
+                    save_func(self, save_path)
+                    messagebox.showinfo('Info', 'Save successfully.')
+        return save_decorator
+
     @save_image
     def save_with_pil(self, save_path, width, height):
         if self.current_img.size != (width, height):
@@ -100,3 +112,15 @@ class BaseBoard(tk.Canvas):
             nw = width
             nh = round(nw / aspect)
         return nw, nh
+
+    @save_gif
+    def save_gif_file(self, save_path):
+        if self.img_path:
+            imgs = self.create_gif_image()
+            imgs[0].save(
+                save_path,
+                save_all=True,
+                append_images=imgs[1:],
+                optimize=False,
+                duration=50,
+                loop=0)

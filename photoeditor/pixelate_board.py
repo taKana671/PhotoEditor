@@ -52,9 +52,10 @@ class EditorBoard(BoardWindow):
             row=1, column=0, columnspan=2, sticky=(tk.W, tk.E, tk.N, tk.S))
         self.create_save_widgets(controller_frame, self.right_canvas.save_open_cv)
         self.create_pixelate_widgets(controller_frame)
+        self.create_gif_widgets(controller_frame)
 
     def create_pixelate_widgets(self, controller_frame):
-        ratio_list = [0.1, 0.05]
+        ratio_list = [0.1, 0.05, 0.025]
         for ratio in ratio_list:
             radio = ttk.Radiobutton(
                 controller_frame, text=str(ratio), value=ratio, variable=self.ratio_double)
@@ -66,6 +67,11 @@ class EditorBoard(BoardWindow):
         area_button = ttk.Button(
             controller_frame, text='Area', command=self.right_canvas.show_pixelated_area)
         area_button.pack(side=tk.RIGHT, pady=PADY, padx=(1, 1))
+
+    def create_gif_widgets(self, controller_frame):
+        gif_button = ttk.Button(
+            controller_frame, text='Save Gif', command=self.right_canvas.save_gif_file)
+        gif_button.pack(side=tk.RIGHT, pady=PADY, padx=(1, 20))
 
     def get_img_size(self):
         img_width = self.right_canvas.display_img.width()
@@ -129,13 +135,10 @@ class PixelateBoard(BaseBoard):
     def show_image(self, path):
         """Display an image on a canvas when the image was dropped.
         """
-        self.delete('all')
         self.current_img = cv2.imread(path)
         self.img_path = Path(path)
-        # img_rgb = cv2.cvtColor(self.current_img, cv2.COLOR_BGR2RGB)
         self.create_photo_image()
 
-    # def create_photo_image(self, img_rgb):
     def create_photo_image(self):
         h, w = self.current_img.shape[:2]
         img_rgb = cv2.cvtColor(self.current_img, cv2.COLOR_BGR2RGB)
@@ -145,15 +148,8 @@ class PixelateBoard(BaseBoard):
         else:
             nw, nh = self.get_cv_aspect()
             self.display_img = ImageTk.PhotoImage(img_pil.resize((nw, nh)))
+        self.delete('all')
         self.create_image(0, 0, image=self.display_img, anchor=tk.NW)
-
-    def get_display_image(self):
-        h, w = self.current_img.shape[:2]
-        if w <= BOARD_W and h <= BOARD_H:
-            return self.current_img
-        else:
-            nw, nh = self.get_cv_aspect()
-            return cv2.resize(self.current_img, dsize=(nw, nh))
 
 
 class LeftCanvas(PixelateBoard):
@@ -243,17 +239,18 @@ class RightCanvas(PixelateBoard):
             self.display_image_size(*self.current_img.shape[:-1][::-1])
             BaseBoard.drag_start = False
 
-    def pixelate(self, img):
-        ratio = self.ratio_double.get()
+    def pixelate(self, img, ratio=None):
+        if not ratio:
+            ratio = self.ratio_double.get()
         smaller = cv2.resize(
             img, None, fx=ratio, fy=ratio, interpolation=cv2.INTER_NEAREST)
         return cv2.resize(smaller, img.shape[:2][::-1], interpolation=cv2.INTER_NEAREST)
 
     def show_pixelated_entire(self):
-        img = cv2.imread(self.img_path.as_posix())
-        self.current_img = self.pixelate(img)
-        # img_rgb = cv2.cvtColor(self.current_img, cv2.COLOR_BGR2RGB)
-        self.create_photo_image()
+        if self.img_path:
+            img = cv2.imread(self.img_path.as_posix())
+            self.current_img = self.pixelate(img)
+            self.create_photo_image()
 
     def show_pixelated_area(self):
         if rectangle := self.get_rectangle():
@@ -270,3 +267,10 @@ class RightCanvas(PixelateBoard):
                 self.pixelate(self.current_img[y:y + height, x:x + width])
             self.create_photo_image()
             self.clear_rectangle()
+
+    def create_gif_image(self):
+        if self.img_path:
+            img = cv2.cvtColor(cv2.imread(self.img_path.as_posix()), cv2.COLOR_BGR2RGB)
+            imgs = [Image.fromarray(self.pixelate(img, 1 / i)) for i in range(1, 25)]
+            imgs += imgs[-2::-1] + [Image.fromarray(img)] * 5
+            return imgs
