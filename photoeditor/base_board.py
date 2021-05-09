@@ -30,20 +30,20 @@ class BaseBoard(tk.Canvas):
         self.width_var.set(width)
         self.height_var.set(height)
 
-    def create_photo_image(self):
-        display_img = self.get_display_image()
+    def create_image_pil(self, img):
         self.delete('all')
-        self.display_img = ImageTk.PhotoImage(display_img)
-        self.create_image(0, 0, image=self.display_img, anchor=tk.NW)
+        self.display_img = self.get_display_image_pil(img)
+        self.photo_img = ImageTk.PhotoImage(self.display_img)
+        self.create_image(0, 0, image=self.photo_img, anchor=tk.NW)
 
-    def get_display_image(self):
-        w, h = self.current_img.size
+    def get_display_image_pil(self, img):
+        w, h = img.size
         if w <= BOARD_W and h <= BOARD_H:
-            return self.current_img
-        else:
-            img = self.current_img.copy()
-            img.thumbnail((BOARD_W, BOARD_H), Image.BICUBIC)
             return img
+        else:
+            copy_img = img.copy()
+            copy_img.thumbnail((BOARD_W, BOARD_H), Image.BICUBIC)
+            return copy_img
 
     def is_image_file(self, path):
         if os.path.isfile(path):
