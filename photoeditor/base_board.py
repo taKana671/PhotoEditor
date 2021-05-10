@@ -45,6 +45,22 @@ class BaseBoard(tk.Canvas):
             copy_img.thumbnail((BOARD_W, BOARD_H), Image.BICUBIC)
             return copy_img
 
+    def create_image_cv(self, img):
+        self.delete('all')
+        self.display_img = self.get_display_image_cv(img)
+        self.photo_img = ImageTk.PhotoImage(self.display_img)
+        self.create_image(0, 0, image=self.photo_img, anchor=tk.NW)
+
+    def get_display_image_cv(self, img):
+        h, w = img.shape[:2]
+        img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        img_pil = Image.fromarray(img_rgb)
+        if w <= BOARD_W and h <= BOARD_H:
+            return img_pil
+        else:
+            nw, nh = self.get_cv_aspect()
+            return img_pil.resize((nw, nh))
+
     def is_image_file(self, path):
         if os.path.isfile(path):
             _, ext = os.path.splitext(path)
@@ -75,7 +91,7 @@ class BaseBoard(tk.Canvas):
     def save_gif(save_func):
         @wraps(save_func)
         def save_decorator(self):
-            if self.current_img:
+            if self.current_img is not None:
                 save_path = filedialog.asksaveasfilename(
                     title='Save as',
                     filetypes=[('gif', '*.gif')])
