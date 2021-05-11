@@ -74,6 +74,10 @@ class PixelateBoard(BaseBoard):
         self.img_path = Path(path)
         self.create_image_cv(self.current_img)
 
+    def create_image_cv(self, img):
+        img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        super().create_image_cv(img_rgb)
+
 
 class LeftCanvas(PixelateBoard):
     """The left canvas to show an source image.

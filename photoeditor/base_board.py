@@ -53,8 +53,7 @@ class BaseBoard(tk.Canvas):
 
     def get_display_image_cv(self, img):
         h, w = img.shape[:2]
-        img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-        img_pil = Image.fromarray(img_rgb)
+        img_pil = Image.fromarray(img)
         if w <= BOARD_W and h <= BOARD_H:
             return img_pil
         else:
