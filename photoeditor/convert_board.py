@@ -112,25 +112,14 @@ class ConvertBoard(BaseBoard):
     def show_image(self, path):
         """Display an image on a canvas when the image was dropped.
         """
-        self.delete('all')
         self.current_img = cv2.imread(path)
         self.img_path = Path(path)
         img_rgb = cv2.cvtColor(self.current_img, cv2.COLOR_BGR2RGB)
-        self.create_photo_image(img_rgb)
-
-    def create_photo_image(self, img_rgb):
-        h, w = self.current_img.shape[:2]
-        img_pil = Image.fromarray(img_rgb)
-        if w <= 600 and h <= 500:
-            self.display_img = ImageTk.PhotoImage(img_pil)
-        else:
-            nw, nh = self.get_cv_aspect()
-            self.display_img = ImageTk.PhotoImage(img_pil.resize((nw, nh)))
-        self.create_image(0, 0, image=self.display_img, anchor=tk.NW)
+        self.create_image_cv(img_rgb)
 
 
 class LeftCanvas(ConvertBoard):
-    """The left canvas to show an original image.
+    """The left canvas to show a source image.
     """
     def __init__(self, master):
         super().__init__(master)
@@ -213,7 +202,8 @@ class RightCanvas(ConvertBoard):
         if self.img_path:
             img = cv2.imread(self.img_path.as_posix())
             self.current_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-            self.create_photo_image(self.current_img)
+            self.create_image_cv(self.current_img)
+            self.display_image_size(*self.current_img.shape[::-1])
 
     def correct_peripheral_light(self, img, gain_params):
         h, w = img.shape[:2]
@@ -252,7 +242,8 @@ class RightCanvas(ConvertBoard):
             img_hsv[:, :, 2] = gray
             self.current_img = cv2.cvtColor(img_hsv, cv2.COLOR_HSV2BGR)
             img_rgb = cv2.cvtColor(img_hsv, cv2.COLOR_HSV2RGB)
-            self.create_photo_image(img_rgb)
+            self.create_image_cv(img_rgb)
+            self.display_image_size(*self.current_img.shape[:-1][::-1])
 
     def show_image_like_animation(self, k=30):
         if self.img_path:
@@ -264,7 +255,8 @@ class RightCanvas(ConvertBoard):
             img = cv2.pyrMeanShiftFiltering(img, 5, 20)
             self.current_img = cv2.subtract(img, edge)
             img_rgb = cv2.cvtColor(self.current_img, cv2.COLOR_BGR2RGB)
-            self.create_photo_image(img_rgb)
+            self.create_image_cv(img_rgb)
+            self.display_image_size(*self.current_img.shape[:-1][::-1])
 
     def sub_color(self, img, k):
         z = img.reshape((-1, 3))
@@ -283,7 +275,8 @@ class RightCanvas(ConvertBoard):
             img = cv2.resize(img, (w, h), interpolation=cv2.INTER_NEAREST)
             self.current_img = self.sub_color(img, k)
             img_rgb = cv2.cvtColor(self.current_img, cv2.COLOR_BGR2RGB)
-            self.create_photo_image(img_rgb)
+            self.create_image_cv(img_rgb)
+            self.display_image_size(*self.current_img.shape[:-1][::-1])
 
     def get_scale_and_angle(self):
         try:
@@ -312,7 +305,8 @@ class RightCanvas(ConvertBoard):
                 self.current_img = cv2.warpAffine(
                     img, mat, (w, h), borderMode=cv2.BORDER_TRANSPARENT, dst=dst)
                 img_rgb = cv2.cvtColor(self.current_img, cv2.COLOR_BGR2RGB)
-                self.create_photo_image(img_rgb)
+                self.create_image_cv(img_rgb)
+                self.display_image_size(*self.current_img.shape[:-1][::-1])
 
     def show_geometric_image(self, mode):
         if self.img_path:
@@ -324,7 +318,8 @@ class RightCanvas(ConvertBoard):
                 self.current_img = cv2.warpAffine(
                     img, mat, (w, h), borderMode=mode)
                 img_rgb = cv2.cvtColor(self.current_img, cv2.COLOR_BGR2RGB)
-                self.create_photo_image(img_rgb)
+                self.create_image_cv(img_rgb)
+                self.display_image_size(*self.current_img.shape[:-1][::-1])
 
     def get_skew_angle(self):
         self.skew_angle_id += 1
@@ -345,7 +340,8 @@ class RightCanvas(ConvertBoard):
                 mat = np.array([[1, 0, 0], [angle, 1, 0]], dtype=np.float32)
                 self.current_img = cv2.warpAffine(img, mat, (w, int(h + w * angle)))
             img_rgb = cv2.cvtColor(self.current_img, cv2.COLOR_BGR2RGB)
-            self.create_photo_image(img_rgb)
+            self.create_image_cv(img_rgb)
+            self.display_image_size(*self.current_img.shape[:-1][::-1])
 
     def drop_enter(self, event):
         event.widget.focus_force()

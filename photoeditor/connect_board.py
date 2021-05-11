@@ -1,9 +1,9 @@
 import re
 import tkinter as tk
 import tkinter.ttk as ttk
-from PIL import Image
 from tkinter import messagebox
 
+from PIL import Image
 from TkinterDnD2 import *
 
 from base_board import BaseBoard, InvalidSizeError
@@ -93,13 +93,12 @@ class ConnectBoard(BaseBoard):
         super().__init__(master, width_var, height_var)
 
     def show_image(self, path):
-        self.delete('all')
         self.current_img = Image.open(path)
-        self.create_photo_image()
+        self.create_image_pil(self.current_img)
 
 
 class LeftCanvas(ConnectBoard):
-    """The left canvas to show images to be connected.
+    """The left canvas to show a source image.
     """
 
     def __init__(self, master):
@@ -122,7 +121,7 @@ class LeftCanvas(ConnectBoard):
             if ConnectBoard.source_idx > len(ConnectBoard.sources):
                 ConnectBoard.source_idx = 1
             self.current_img = ConnectBoard.sources[ConnectBoard.source_idx]
-            self.create_photo_image()
+            self.create_image_pil(self.current_img)
 
     def clear_images(self):
         self.delete('all')
@@ -146,7 +145,7 @@ class LeftCanvas(ConnectBoard):
         print(f'Drop: {event.widget}')
         if re.fullmatch('[0-9]+', event.data):
             self.current_img = ConnectBoard.sources[int(event.data)]
-            self.create_photo_image()
+            self.create_image_pil(self.current_img)
             ConnectBoard.is_get_image = True
         elif self.is_image_file(event.data):
             self.show_image(event.data)
@@ -214,7 +213,7 @@ class RightCanvas(ConnectBoard):
             base_h = self.concat_horizontally_repeat(img, col)
             self.current_img = self.concat_vertically_repeat(base_h, row)
             self.concat_imgs = [self.current_img]
-            self.create_photo_image()
+            self.create_image_pil(self.current_img)
             self.display_image_size(*self.current_img.size)
         except Exception as e:
             messagebox.showerror('Error', e)
@@ -252,7 +251,7 @@ class RightCanvas(ConnectBoard):
             else:
                 self.current_img = self.concat_vertically()
             self.concat_imgs = [self.current_img]
-            self.create_photo_image()
+            self.create_image_pil(self.current_img)
             self.display_image_size(*self.current_img.size)
 
     def get_key(self):
@@ -279,7 +278,7 @@ class RightCanvas(ConnectBoard):
         print('Dropped:', event.widget)
         if BaseBoard.drag_start:
             self.current_img = ConnectBoard.sources[int(event.data)]
-            self.create_photo_image()
+            self.create_image_pil(self.current_img)
             self.display_image_size(*self.current_img.size)
             self.concat_imgs.append(self.current_img)
             BaseBoard.drag_start = False
