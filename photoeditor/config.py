@@ -1,3 +1,5 @@
+FACE_CASCADE_PATH = 'haarcascades/haarcascade_frontalface_default.xml'
+
 BOARD_W = 600
 BOARD_H = 500
 WINDOW_W = 1200
