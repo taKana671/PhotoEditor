@@ -20,7 +20,6 @@ class BaseBoard(tk.Canvas):
     drag_start = False
 
     def __init__(self, master, width_var=None, height_var=None):
-        self.source_img = None
         self.current_img = None
         self.display_img = None
         self.width_var = width_var

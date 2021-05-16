@@ -3,6 +3,7 @@ import tkinter.ttk as ttk
 
 from config import PADY
 
+
 class BoardWindow(ttk.Frame):
 
     def __init__(self, master):

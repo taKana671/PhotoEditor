@@ -108,11 +108,13 @@ class ConvertBoard(BaseBoard):
 
     def __init__(self, master, width_var=None, height_var=None):
         super().__init__(master, width_var, height_var)
+        self.source_img = None
 
     def show_image(self, path):
         """Display an image on a canvas when the image was dropped.
         """
-        self.current_img = cv2.imread(path)
+        self.source_img = cv2.imread(path)
+        self.current_img = self.source_img.copy()
         self.img_path = Path(path)
         img_rgb = cv2.cvtColor(self.current_img, cv2.COLOR_BGR2RGB)
         self.create_image_cv(img_rgb)
@@ -200,8 +202,7 @@ class RightCanvas(ConvertBoard):
 
     def show_gray_image(self):
         if self.img_path:
-            img = cv2.imread(self.img_path.as_posix())
-            self.current_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+            self.current_img = cv2.cvtColor(self.source_img, cv2.COLOR_BGR2GRAY)
             self.create_image_cv(self.current_img)
             self.display_image_size(*self.current_img.shape[::-1])
 
@@ -228,15 +229,14 @@ class RightCanvas(ConvertBoard):
 
     def show_sepia_image(self):
         if self.img_path:
-            img = cv2.imread(self.img_path.as_posix())
-            gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+            gray = cv2.cvtColor(self.source_img, cv2.COLOR_BGR2GRAY)
             if self.noise_bool.get():
                 gray = self.superimpose_noise(gray)
             if self.contrast_bool.get():
                 gray = self.enhance_contrast(gray)
             if self.light_bool.get():
                 gray = self.correct_peripheral_light(gray, -0.4).astype(np.uint8)
-            img_hsv = np.zeros_like(img)
+            img_hsv = np.zeros_like(self.source_img)
             img_hsv[:, :, 0] = np.full_like(img_hsv[:, :, 0], 15, dtype=np.uint8)
             img_hsv[:, :, 1] = np.full_like(img_hsv[:, :, 1], 153, dtype=np.uint8)
             img_hsv[:, :, 2] = gray
@@ -247,12 +247,11 @@ class RightCanvas(ConvertBoard):
 
     def show_image_like_animation(self, k=30):
         if self.img_path:
-            img = cv2.imread(self.img_path.as_posix())
-            gray = cv2.cvtColor(img, cv2.COLOR_BGRA2GRAY)
+            gray = cv2.cvtColor(self.source_img, cv2.COLOR_BGRA2GRAY)
             edge = cv2.blur(gray, (3, 3))
             edge = cv2.Canny(edge, 50, 150, apertureSize=3)
             edge = cv2.cvtColor(edge, cv2.COLOR_GRAY2BGR)
-            img = cv2.pyrMeanShiftFiltering(img, 5, 20)
+            img = cv2.pyrMeanShiftFiltering(self.source_img, 5, 20)
             self.current_img = cv2.subtract(img, edge)
             img_rgb = cv2.cvtColor(self.current_img, cv2.COLOR_BGR2RGB)
             self.create_image_cv(img_rgb)
@@ -269,9 +268,8 @@ class RightCanvas(ConvertBoard):
 
     def show_pixel_art(self, alpha=2, k=4):
         if self.img_path:
-            img = cv2.imread(self.img_path.as_posix())
-            h, w, _ = img.shape
-            img = cv2.resize(img, (int(w * alpha), int(h * alpha)))
+            h, w, _ = self.source_img.shape
+            img = cv2.resize(self.source_img, (int(w * alpha), int(h * alpha)))
             img = cv2.resize(img, (w, h), interpolation=cv2.INTER_NEAREST)
             self.current_img = self.sub_color(img, k)
             img_rgb = cv2.cvtColor(self.current_img, cv2.COLOR_BGR2RGB)
@@ -298,12 +296,11 @@ class RightCanvas(ConvertBoard):
         if self.img_path:
             scale, angle = self.get_scale_and_angle()
             if scale is not None and angle is not None:
-                img = cv2.imread(self.img_path.as_posix())
-                dst = img // 4
-                h, w, _ = img.shape
+                dst = self.source_img // 4
+                h, w, _ = self.source_img.shape
                 mat = cv2.getRotationMatrix2D((w / 2, h / 2), angle, scale)
                 self.current_img = cv2.warpAffine(
-                    img, mat, (w, h), borderMode=cv2.BORDER_TRANSPARENT, dst=dst)
+                    self.source_img, mat, (w, h), borderMode=cv2.BORDER_TRANSPARENT, dst=dst)
                 img_rgb = cv2.cvtColor(self.current_img, cv2.COLOR_BGR2RGB)
                 self.create_image_cv(img_rgb)
                 self.display_image_size(*self.current_img.shape[:-1][::-1])
@@ -312,11 +309,10 @@ class RightCanvas(ConvertBoard):
         if self.img_path:
             scale, angle = self.get_scale_and_angle()
             if scale is not None and angle is not None:
-                img = cv2.imread(self.img_path.as_posix())
-                h, w, _ = img.shape
+                h, w, _ = self.current_img.shape
                 mat = cv2.getRotationMatrix2D((w / 2, h / 2), angle, scale)
                 self.current_img = cv2.warpAffine(
-                    img, mat, (w, h), borderMode=mode)
+                    self.source_img, mat, (w, h), borderMode=mode)
                 img_rgb = cv2.cvtColor(self.current_img, cv2.COLOR_BGR2RGB)
                 self.create_image_cv(img_rgb)
                 self.display_image_size(*self.current_img.shape[:-1][::-1])
@@ -330,15 +326,14 @@ class RightCanvas(ConvertBoard):
     def show_skewed_image(self):
         if self.img_path:
             skew_angle = self.get_skew_angle()
-            img = cv2.imread(self.img_path.as_posix())
             angle = math.tan(math.radians(skew_angle))
-            h, w, _ = img.shape
+            h, w, _ = self.source_img.shape
             if self.xy_bool.get():
                 mat = np.array([[1, angle, 0], [0, 1, 0]], dtype=np.float32)
-                self.current_img = cv2.warpAffine(img, mat, (int(w + h * angle), h))
+                self.current_img = cv2.warpAffine(self.source_img, mat, (int(w + h * angle), h))
             else:
                 mat = np.array([[1, 0, 0], [angle, 1, 0]], dtype=np.float32)
-                self.current_img = cv2.warpAffine(img, mat, (w, int(h + w * angle)))
+                self.current_img = cv2.warpAffine(self.source_img, mat, (w, int(h + w * angle)))
             img_rgb = cv2.cvtColor(self.current_img, cv2.COLOR_BGR2RGB)
             self.create_image_cv(img_rgb)
             self.display_image_size(*self.current_img.shape[:-1][::-1])
