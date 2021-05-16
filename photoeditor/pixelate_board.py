@@ -22,6 +22,8 @@ class EditorBoard(BoardWindow):
 
     def create_board_variables(self):
         self.ratio = tk.DoubleVar()
+        self.min_neighbors = tk.IntVar()
+        self.scale_factor = tk.DoubleVar()
 
     def create_left_canvas(self, base_frame):
         self.left_canvas = LeftCanvas(base_frame)
@@ -30,7 +32,8 @@ class EditorBoard(BoardWindow):
 
     def create_right_canvas(self, base_frame):
         self.right_canvas = RightCanvas(
-            base_frame, self.width_var, self.height_var, self.ratio)
+            base_frame, self.width_var, self.height_var, self.ratio,
+            self.scale_factor, self.min_neighbors)
         self.right_canvas.grid(
             row=0, column=1, padx=(1, 5), pady=5, sticky=(tk.W, tk.E, tk.N, tk.S))
 
@@ -40,6 +43,7 @@ class EditorBoard(BoardWindow):
             row=1, column=0, columnspan=2, sticky=(tk.W, tk.E, tk.N, tk.S))
         self.create_save_widgets(controller_frame, self.right_canvas.save_open_cv)
         self.create_pixelate_widgets(controller_frame)
+        self.create_detect_widgets(controller_frame)
         self.create_gif_widgets(controller_frame)
 
     def create_pixelate_widgets(self, controller_frame):
@@ -59,6 +63,21 @@ class EditorBoard(BoardWindow):
             controller_frame, text='Face Detect', command=self.right_canvas.detect_face)
         detect_button.pack(side=tk.RIGHT, pady=PADY, padx=(1, 1))
 
+    def create_detect_widgets(self, controller_frame):
+        min_neighbors = ttk.Entry(controller_frame, width=5, textvariable=self.min_neighbors)
+        min_neighbors.pack(side=tk.RIGHT, pady=PADY, padx=(1, 20))
+        neighbors_label = ttk.Label(controller_frame, text='minNeighbors:')
+        neighbors_label.pack(side=tk.RIGHT, pady=PADY, padx=(1, 1))
+        scale_factor = ttk.Entry(controller_frame, width=5, textvariable=self.scale_factor)
+        scale_factor.pack(side=tk.RIGHT, pady=PADY, padx=(1, 1))
+        factor_label = ttk.Label(controller_frame, text='scaleFactor:')
+        factor_label.pack(side=tk.RIGHT, pady=PADY, padx=(1, 1))
+        self.scale_factor.set(1.05)
+        self.min_neighbors.set(2)
+        detect_button = ttk.Button(
+            controller_frame, text='Face Detect', command=self.right_canvas.detect_face)
+        detect_button.pack(side=tk.RIGHT, pady=PADY, padx=(1, 1))
+
     def create_gif_widgets(self, controller_frame):
         gif_button = ttk.Button(
             controller_frame, text='Save Gif', command=self.right_canvas.save_gif_file)
@@ -69,6 +88,7 @@ class PixelateBoard(BaseBoard):
 
     def __init__(self, master, width_var=None, height_var=None):
         super().__init__(master, width_var, height_var)
+        self.source_img = None
 
     def show_image(self, path):
         """Display an image on a canvas when the image was dropped.
@@ -133,11 +153,13 @@ class LeftCanvas(PixelateBoard):
 class RightCanvas(PixelateBoard):
     """The right canvas to show a pixelated image.
     """
-    def __init__(self, master, width_var, height_var, ratio):
+    def __init__(self, master, width_var, height_var, ratio, scale_factor, min_neighbors):
         super().__init__(master, width_var, height_var)
         self.rectangle_tag = 'rect'
         self.corners = []
         self.ratio = ratio
+        self.scale_factor = scale_factor
+        self.min_neighbors = min_neighbors
         self.create_bind()
 
     def create_bind(self):
@@ -187,14 +209,15 @@ class RightCanvas(PixelateBoard):
 
     def detect_face(self):
         if self.img_path:
-            ratio = self.ratio.get()
-            face_cascade = cv2.CascadeClassifier(FACE_CASCADE_PATH)
-            img_gray = cv2.cvtColor(self.source_img, cv2.COLOR_BGR2GRAY)
-            faces = face_cascade.detectMultiScale(img_gray, scaleFactor=1.05, minNeighbors=2)
-            for x, y, w, h in faces:
-                self.current_img[y:y + h, x:x + w] = self.pixelate(
-                    self.current_img[y:y + h, x:x + w], ratio)
-            self.create_image_cv(self.current_img)
+            if (scale_factor := self.scale_factor.get()) and (min_neighbors := self.min_neighbors.get()):
+                face_cascade = cv2.CascadeClassifier(FACE_CASCADE_PATH)
+                img_gray = cv2.cvtColor(self.source_img, cv2.COLOR_BGR2GRAY)
+                faces = face_cascade.detectMultiScale(
+                    img_gray, scaleFactor=scale_factor, minNeighbors=min_neighbors)
+                for x, y, w, h in faces:
+                    self.current_img[y:y + h, x:x + w] = self.pixelate(
+                        self.current_img[y:y + h, x:x + w], 0.1)
+                self.create_image_cv(self.current_img)
 
     def drop_enter(self, event):
         event.widget.focus_force()
