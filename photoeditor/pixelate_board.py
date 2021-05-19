@@ -12,7 +12,7 @@ from TkinterDnD2 import *
 
 from base_board import BaseBoard
 from board_window import BoardWindow
-from config import PADY, FACE_CASCADE_PATH
+from config import PADY, FACE_CASCADE_PATH, EYE_CASCADE_PATH
 
 
 Corner = namedtuple('Corner', 'x y')
@@ -59,10 +59,7 @@ class EditorBoard(BoardWindow):
         area_button = ttk.Button(
             controller_frame, text='Area', command=self.right_canvas.show_pixelated_area)
         area_button.pack(side=tk.RIGHT, pady=PADY, padx=(1, 1))
-        detect_button = ttk.Button(
-            controller_frame, text='Face Detect', command=self.right_canvas.detect_face)
-        detect_button.pack(side=tk.RIGHT, pady=PADY, padx=(1, 1))
-
+        
     def create_detect_widgets(self, controller_frame):
         min_neighbors = ttk.Entry(controller_frame, width=5, textvariable=self.min_neighbors)
         min_neighbors.pack(side=tk.RIGHT, pady=PADY, padx=(1, 20))
@@ -74,9 +71,12 @@ class EditorBoard(BoardWindow):
         factor_label.pack(side=tk.RIGHT, pady=PADY, padx=(1, 1))
         self.scale_factor.set(1.05)
         self.min_neighbors.set(2)
-        detect_button = ttk.Button(
+        face_detect_button = ttk.Button(
             controller_frame, text='Face Detect', command=self.right_canvas.detect_face)
-        detect_button.pack(side=tk.RIGHT, pady=PADY, padx=(1, 1))
+        face_detect_button.pack(side=tk.RIGHT, pady=PADY, padx=(1, 1))
+        eye_detect_button = ttk.Button(
+            controller_frame, text='Eye Detect', command=self.right_canvas.detect_eye)
+        eye_detect_button.pack(side=tk.RIGHT, pady=PADY, padx=(1, 1))
 
     def create_gif_widgets(self, controller_frame):
         gif_button = ttk.Button(
@@ -215,8 +215,26 @@ class RightCanvas(PixelateBoard):
                 faces = face_cascade.detectMultiScale(
                     img_gray, scaleFactor=scale_factor, minNeighbors=min_neighbors)
                 for x, y, w, h in faces:
-                    self.current_img[y:y + h, x:x + w] = self.pixelate(
-                        self.current_img[y:y + h, x:x + w], 0.1)
+                    self.current_img[y: y + h, x: x + w] = self.pixelate(
+                        self.current_img[y: y + h, x: x + w], 0.1)
+                self.create_image_cv(self.current_img)
+
+    def detect_eye(self):
+        if self.img_path:
+            if (scale_factor := self.scale_factor.get()) and (min_neighbors := self.min_neighbors.get()):
+                face_cascade = cv2.CascadeClassifier(FACE_CASCADE_PATH)
+                eye_cascade = cv2.CascadeClassifier(EYE_CASCADE_PATH)
+                img_gray = cv2.cvtColor(self.source_img, cv2.COLOR_BGR2GRAY)
+                faces = face_cascade.detectMultiScale(
+                    img_gray, scaleFactor=scale_factor, minNeighbors=min_neighbors)
+                for x, y, h, w in faces:
+                    face = self.current_img[y: y + h, x: x + w]
+                    face_gray = img_gray[y: y + h, x: x + w]
+                    eyes = eye_cascade.detectMultiScale(
+                        face_gray, scaleFactor=scale_factor, minNeighbors=min_neighbors)
+                    for ex, ey, ew, eh in eyes:
+                        face[ey: ey + eh, ex: ex + ew] = self.pixelate(
+                            face[ey: ey + eh, ex: ex + ew], 0.1)
                 self.create_image_cv(self.current_img)
 
     def drop_enter(self, event):
