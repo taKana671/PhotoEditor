@@ -18,7 +18,6 @@ from config import PADY, FACE_CASCADE_PATH, EYE_CASCADE_PATH
 
 
 Corner = namedtuple('Corner', 'x y')
-DetectArgs = namedtuple('DetectArgs', 'scale_factor min_neighbors')
 
 
 class EditorBoard(BoardWindow):
@@ -221,11 +220,12 @@ class RightCanvas(PixelateBoard):
     def get_detect_args(self):
         return self.scale_factor.get(), self.min_neighbors.get()
 
-    def get_faces(self, img_gray, scale_factor, min_neighbors):
+    def get_faces(self, source, scale_factor, min_neighbors):
         face_cascade = cv2.CascadeClassifier(FACE_CASCADE_PATH)
+        img_gray = cv2.cvtColor(source, cv2.COLOR_BGR2GRAY)
         faces = face_cascade.detectMultiScale(
             img_gray, scaleFactor=scale_factor, minNeighbors=min_neighbors)
-        return faces
+        return faces, img_gray
 
     def detection(func):
         @wraps(func)
@@ -240,8 +240,7 @@ class RightCanvas(PixelateBoard):
     @detection
     def detect_face(self):
         scale_factor, min_neighbors = self.get_detect_args()
-        img_gray = cv2.cvtColor(self.source_img, cv2.COLOR_BGR2GRAY)
-        faces = self.get_faces(img_gray, scale_factor, min_neighbors)
+        faces, _ = self.get_faces(self.source_img, scale_factor, min_neighbors)
         for x, y, w, h in faces:
             self.current_img[y: y + h, x: x + w] = self.pixelate(
                 self.current_img[y: y + h, x: x + w], 0.1)
@@ -250,8 +249,7 @@ class RightCanvas(PixelateBoard):
     @detection
     def detect_eye(self):
         scale_factor, min_neighbors = self.get_detect_args()
-        img_gray = cv2.cvtColor(self.source_img, cv2.COLOR_BGR2GRAY)
-        faces = self.get_faces(img_gray, scale_factor, min_neighbors)
+        faces, img_gray = self.get_faces(self.source_img, scale_factor, min_neighbors)
         eye_cascade = cv2.CascadeClassifier(EYE_CASCADE_PATH)
         for x, y, h, w in faces:
             face = self.current_img[y: y + h, x: x + w]
