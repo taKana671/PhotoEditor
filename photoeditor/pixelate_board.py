@@ -2,7 +2,9 @@ import math
 import tkinter as tk
 import tkinter.ttk as ttk
 from collections import namedtuple
+from functools import wraps
 from pathlib import Path
+from tkinter import messagebox
 
 import cv2
 import numpy as np
@@ -16,6 +18,7 @@ from config import PADY, FACE_CASCADE_PATH, EYE_CASCADE_PATH
 
 
 Corner = namedtuple('Corner', 'x y')
+DetectArgs = namedtuple('DetectArgs', 'scale_factor min_neighbors')
 
 
 class EditorBoard(BoardWindow):
@@ -45,6 +48,7 @@ class EditorBoard(BoardWindow):
         self.create_pixelate_widgets(controller_frame)
         self.create_detect_widgets(controller_frame)
         self.create_gif_widgets(controller_frame)
+        self.compare_images_widgets(controller_frame)
 
     def create_pixelate_widgets(self, controller_frame):
         ratio_list = [0.1, 0.05, 0.025]
@@ -59,7 +63,7 @@ class EditorBoard(BoardWindow):
         area_button = ttk.Button(
             controller_frame, text='Area', command=self.right_canvas.show_pixelated_area)
         area_button.pack(side=tk.RIGHT, pady=PADY, padx=(1, 1))
-        
+
     def create_detect_widgets(self, controller_frame):
         min_neighbors = ttk.Entry(controller_frame, width=5, textvariable=self.min_neighbors)
         min_neighbors.pack(side=tk.RIGHT, pady=PADY, padx=(1, 20))
@@ -82,6 +86,13 @@ class EditorBoard(BoardWindow):
         gif_button = ttk.Button(
             controller_frame, text='Save Gif', command=self.right_canvas.save_gif_file)
         gif_button.pack(side=tk.RIGHT, pady=PADY, padx=(1, 20))
+
+    def compare_images_widgets(self, controller_frame):
+        compare_button = ttk.Button(
+            controller_frame,
+            text='Compare',
+            command=lambda: self.right_canvas.compare_images(self.left_canvas.source_img))
+        compare_button.pack(side=tk.RIGHT, pady=PADY, padx=(1, 1))
 
 
 class PixelateBoard(BaseBoard):
@@ -207,35 +218,63 @@ class RightCanvas(PixelateBoard):
             imgs += imgs[-2::-1] + [Image.fromarray(img)] * 5
             return imgs
 
-    def detect_face(self):
-        if self.img_path:
-            if (scale_factor := self.scale_factor.get()) and (min_neighbors := self.min_neighbors.get()):
-                face_cascade = cv2.CascadeClassifier(FACE_CASCADE_PATH)
-                img_gray = cv2.cvtColor(self.source_img, cv2.COLOR_BGR2GRAY)
-                faces = face_cascade.detectMultiScale(
-                    img_gray, scaleFactor=scale_factor, minNeighbors=min_neighbors)
-                for x, y, w, h in faces:
-                    self.current_img[y: y + h, x: x + w] = self.pixelate(
-                        self.current_img[y: y + h, x: x + w], 0.1)
-                self.create_image_cv(self.current_img)
+    def get_detect_args(self):
+        return self.scale_factor.get(), self.min_neighbors.get()
 
+    def get_faces(self, img_gray, scale_factor, min_neighbors):
+        face_cascade = cv2.CascadeClassifier(FACE_CASCADE_PATH)
+        faces = face_cascade.detectMultiScale(
+            img_gray, scaleFactor=scale_factor, minNeighbors=min_neighbors)
+        return faces
+
+    def detection(func):
+        @wraps(func)
+        def decorator(self):
+            if self.img_path:
+                try:
+                    func(self)
+                except Exception as e:
+                    messagebox.showerror('error', e)
+        return decorator
+
+    @detection
+    def detect_face(self):
+        scale_factor, min_neighbors = self.get_detect_args()
+        img_gray = cv2.cvtColor(self.source_img, cv2.COLOR_BGR2GRAY)
+        faces = self.get_faces(img_gray, scale_factor, min_neighbors)
+        for x, y, w, h in faces:
+            self.current_img[y: y + h, x: x + w] = self.pixelate(
+                self.current_img[y: y + h, x: x + w], 0.1)
+        self.create_image_cv(self.current_img)
+
+    @detection
     def detect_eye(self):
-        if self.img_path:
-            if (scale_factor := self.scale_factor.get()) and (min_neighbors := self.min_neighbors.get()):
-                face_cascade = cv2.CascadeClassifier(FACE_CASCADE_PATH)
-                eye_cascade = cv2.CascadeClassifier(EYE_CASCADE_PATH)
-                img_gray = cv2.cvtColor(self.source_img, cv2.COLOR_BGR2GRAY)
-                faces = face_cascade.detectMultiScale(
-                    img_gray, scaleFactor=scale_factor, minNeighbors=min_neighbors)
-                for x, y, h, w in faces:
-                    face = self.current_img[y: y + h, x: x + w]
-                    face_gray = img_gray[y: y + h, x: x + w]
-                    eyes = eye_cascade.detectMultiScale(
-                        face_gray, scaleFactor=scale_factor, minNeighbors=min_neighbors)
-                    for ex, ey, ew, eh in eyes:
-                        face[ey: ey + eh, ex: ex + ew] = self.pixelate(
-                            face[ey: ey + eh, ex: ex + ew], 0.1)
-                self.create_image_cv(self.current_img)
+        scale_factor, min_neighbors = self.get_detect_args()
+        img_gray = cv2.cvtColor(self.source_img, cv2.COLOR_BGR2GRAY)
+        faces = self.get_faces(img_gray, scale_factor, min_neighbors)
+        eye_cascade = cv2.CascadeClassifier(EYE_CASCADE_PATH)
+        for x, y, h, w in faces:
+            face = self.current_img[y: y + h, x: x + w]
+            face_gray = img_gray[y: y + h, x: x + w]
+            eyes = eye_cascade.detectMultiScale(
+                face_gray, scaleFactor=scale_factor, minNeighbors=min_neighbors)
+            for ex, ey, ew, eh in eyes:
+                face[ey: ey + eh, ex: ex + ew] = self.pixelate(
+                    face[ey: ey + eh, ex: ex + ew], 0.1)
+        self.create_image_cv(self.current_img)
+
+    def compare_images(self, left_img):
+        if left_img is not None and self.source_img is not None and \
+                left_img.shape == self.source_img.shape:
+            gray_img_ref = cv2.cvtColor(left_img, cv2.COLOR_BGRA2GRAY)
+            gray_img_comp = cv2.cvtColor(self.source_img, cv2.COLOR_BGR2GRAY)
+            img_diff = cv2.absdiff(gray_img_ref, gray_img_comp)
+            _, img_bin = cv2.threshold(img_diff, 50, 255, 0)
+            contours, _ = cv2.findContours(img_bin, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+            for contour in contours:
+                x, y, w, h = cv2.boundingRect(contour)
+                cv2.rectangle(self.current_img, (x, y), (x + w, y + h), (0, 255, 0), 1)
+            self.create_image_cv(self.current_img)
 
     def drop_enter(self, event):
         event.widget.focus_force()
