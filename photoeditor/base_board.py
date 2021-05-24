@@ -131,7 +131,7 @@ class BaseBoard(tk.Canvas):
     @save_gif
     def save_gif_file(self, save_path):
         if self.img_path:
-            imgs = self.create_gif_image()
+            imgs = self.create_animated_gif()
             imgs[0].save(
                 save_path,
                 save_all=True,

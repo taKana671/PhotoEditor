@@ -1,4 +1,3 @@
-import math
 import tkinter as tk
 import tkinter.ttk as ttk
 from collections import namedtuple
@@ -7,7 +6,7 @@ from pathlib import Path
 from tkinter import messagebox
 
 import cv2
-import numpy as np
+# import numpy as np
 from PIL import Image, ImageTk
 from scipy.interpolate import splrep, splev
 from TkinterDnD2 import *
@@ -82,16 +81,19 @@ class EditorBoard(BoardWindow):
         eye_detect_button.pack(side=tk.RIGHT, pady=PADY, padx=(1, 1))
 
     def create_gif_widgets(self, controller_frame):
-        gif_button = ttk.Button(
-            controller_frame, text='Save Gif', command=self.right_canvas.save_gif_file)
-        gif_button.pack(side=tk.RIGHT, pady=PADY, padx=(1, 20))
+        save_gif_button = ttk.Button(
+            controller_frame, text='Save GIF', command=self.right_canvas.save_gif_file)
+        save_gif_button.pack(side=tk.RIGHT, pady=PADY, padx=(1, 20))
+        run_gif_button = ttk.Button(
+            controller_frame, text='Run GIF', command=self.right_canvas.run_animated_gif)
+        run_gif_button.pack(side=tk.RIGHT, pady=PADY, padx=(1, 1))
 
     def compare_images_widgets(self, controller_frame):
         compare_button = ttk.Button(
             controller_frame,
             text='Compare',
             command=lambda: self.right_canvas.compare_images(self.left_canvas.source_img))
-        compare_button.pack(side=tk.RIGHT, pady=PADY, padx=(1, 1))
+        compare_button.pack(side=tk.RIGHT, pady=PADY, padx=(1, 20))
 
 
 class PixelateBoard(BaseBoard):
@@ -99,6 +101,7 @@ class PixelateBoard(BaseBoard):
     def __init__(self, master, width_var=None, height_var=None):
         super().__init__(master, width_var, height_var)
         self.source_img = None
+        self.img_path = None
 
     def show_image(self, path):
         """Display an image on a canvas when the image was dropped.
@@ -210,12 +213,28 @@ class RightCanvas(PixelateBoard):
             self.create_image_cv(self.current_img)
             self.clear_rectangle()
 
-    def create_gif_image(self):
+    def _run_animated_gif(self, idx):
+        """Run an animated gif one time.
+           If you want to run it infinitely, put idx = 0
+           instead of return inside if idx == len(self.gif_imgs).
+        """
+        img = self.gif_imgs[idx]
+        self.create_image_pil(img)
+        idx += 1
+        if idx == len(self.gif_imgs):
+            return
+        self.after(100, self._run_animated_gif, idx)
+
+    def run_animated_gif(self):
         if self.img_path:
-            img = cv2.cvtColor(self.source_img, cv2.COLOR_BGR2RGB)
-            imgs = [Image.fromarray(self.pixelate(img, 1 / i)) for i in range(1, 25)]
-            imgs += imgs[-2::-1] + [Image.fromarray(img)] * 5
-            return imgs
+            self.gif_imgs = self.create_animated_gif()
+            self.after(0, self._run_animated_gif, 0)
+
+    def create_animated_gif(self):
+        img = cv2.cvtColor(self.source_img, cv2.COLOR_BGR2RGB)
+        imgs = [Image.fromarray(self.pixelate(img, 1 / i)) for i in range(1, 25)]
+        imgs += imgs[-2::-1] + [Image.fromarray(img)] * 5
+        return imgs
 
     def get_detect_args(self):
         return self.scale_factor.get(), self.min_neighbors.get()
