@@ -2,7 +2,7 @@
 Python image processing tool
 
 # Demo
-![photoeditor](https://user-images.githubusercontent.com/48859041/119247159-4f18b180-bbc2-11eb-8133-98586aef2c57.gif)
+![photoeditor](https://user-images.githubusercontent.com/48859041/119507518-dc6a2a80-bda9-11eb-82e8-544b56949295.gif)
 
 # Requirements
 * Python 3.8
