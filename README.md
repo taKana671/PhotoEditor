@@ -19,10 +19,10 @@ Python image processing tool
 
 # Usage
 How to use the processing tool
-* [Convert](#Convert)
-* Composite
-* Connect
-* Pixelate
+- [Convert](#Convert)
+- [Composite](#Composite)
+- [Connect](#Connect)
+- [Pixelate](#Pixelate)
 
 ## Convert
 
