@@ -23,34 +23,34 @@ Python image processing tool
 
 Drag a source image into the left canvas from outside, then drag the source image into the right canvas.
 
-### *Save* 
+#### *Save* 
  
  * Input width and height.
  * Click [Save] button to save the image on the right canvas, then a file dialog box will appear.
 
-### *Sepia*
+#### *Sepia*
  
  * Check [Light], [Contrast] and [Noise] boxes if needed.
  * Click [Sepia] button to make the image on the right canvas sepia. 
 
-### *Gray*
+#### *Gray*
 
  * Click [gray] button to make the image on the right canvas gray.
 
-### *Anime*
+#### *Anime*
 
  * Click [Anime] button to make the image on the right canvas like animation.
 
-### *Pixel*
+#### *Pixel*
 
  * Click [Pixel] button to make the image on the right canvas like pixel art.
 
-### *Change mode*
+#### *Change mode*
 
  * Change scale and angle if needed.
  * Every time [Change mode] button is clicked, the image on the right canvas will be converted.
 
-### *Skew*
+#### *Skew*
 
  * Check [X] or [Y].
  * Click [Skew] button to make the image on the right canvas skewed.
@@ -60,20 +60,20 @@ Drag a source image into the left canvas from outside, then drag the source imag
 
 Select or make a mask image on the left canvas. Drag two source images from outsite the canvas and the mask image from the left canvas into the right canvas, then a composite image will be displayed on the right canvas.
 
-### *Save# 
+#### *Save* 
 
  * Input width and height.
  * Click [Save] button to save the image on the right canvas, then a file dialog box will appear.
 
-### *Clear*
+#### *Clear*
 
  * Click [Clear] button to delete the image on the right canvas.
 
-### *Change mask images*
+#### *Change mask images*
 
  * Click [Change] button to select a mask image.
 
-### *Create mask images*
+#### *Create mask images*
 
  * Check [Oval] or [Rectangle].
  * Right click and drag to draw a oval or rectangle on the image on the left canvas.
@@ -81,7 +81,7 @@ Select or make a mask image on the left canvas. Drag two source images from outs
  * Click [Reset] button to delete the shape drawn on the image.
  * Click [Create] button to create and display a mask image on the left canvas.
 
-### *Crop*
+#### *Crop*
 
  * Check [Oval] or [Rectangle].
  * Right click and drag to draw a oval or rectangle on the image on the left canvas.
@@ -95,28 +95,28 @@ Select or make a mask image on the left canvas. Drag two source images from outs
 
 Drag source images into the left canvas from outside, then drag them into the right canvas to connect. The connected images can be dragged into the left canvas to use as a souce image.
 
-### *Save* 
+#### *Save* 
 
  * Input width and height.
  * Click [Save] button to save the image on the right canvas, then a file dialog box will appear.
 
-### *Repeat*
+#### *Repeat*
 
  * Input the number of rows and columns.
  * Click [Repeat] button to make the image on the right canvas repeated.
 
-### *Connect*
+#### *Connect*
 
  * Drag source images from the left canvas to the right canvas.
  * Select [Vertical] or [Horizontal].
  * Click [Connect] button to make the images dragged into the right canvas connected.
  * Click [Reset] button to delete the image on the right canvas.
 
-### *Change*
+#### *Change*
 
  * Click [Change] button to select a source image from the images dragged into the left canvas.
 
-### *Clear#
+#### *Clear*
 
  * Click [Clear] button to delete all of the imaged dragged into the left canvas.
 
@@ -125,34 +125,34 @@ Drag source images into the left canvas from outside, then drag them into the ri
 
 Drag a source image into the left canvas from outside, then drag the source image into the right canvas.
 
-### *Save* 
+#### *Save* 
 
  * Input width and height.
  * Click [Save] button to save the image on the right canvas, then a file dialog box will appear.
 
-### *Entire*
+#### *Entire*
 
  * Check 0.1, 0.05 or 0.025.
  * Click [Entire] button to make the image on the right canvas entirely pixelated.
 
-### *Area*
+#### *Area*
 
  * Check 0.1, 0.05 or 0.025.
  * Right click and drag to draw a rectangle on the image on the right canvas.
  * Click [Area] button to pixelate the area in the drawn rectangle.
 
-### *Detect*
+#### *Detect*
 
  * Click [Face Detect] button to pixelate faces in the image on the right canvas.
  * Click [Eye Detect] button to pixelate eyes in the image on the right canvas. 
  * If faild to detect, adjust scaleFactor and minNeighbors.
 
-### *Make animated GIF*
+#### *Make animated GIF*
 
  * Click [Run GIF] button to make an animated GIF and run it one time on the right canvas.
  * Click [Save GIF] button to make and save an animated GIF. Open the saved file to run the animation Infinitely.
 
-### *Compare*
+#### *Compare*
 
  * Click [Compare] button to compare the images on the left and right canvases. Rectangles will be drawn at where difference is detected in the image on the righ canvas. 
 
