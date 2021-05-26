@@ -19,7 +19,7 @@ Python image processing tool
 
 # Usage
 How to use the processing tool
-* Convert
+* [Convert](#Convert)
 * Composite
 * Connect
 * Pixelate
