@@ -1,7 +1,9 @@
 import math
 import tkinter as tk
 import tkinter.ttk as ttk
+from functools import wraps
 from pathlib import Path
+from tkinter import messagebox
 
 import cv2
 import numpy as np
@@ -9,7 +11,7 @@ from PIL import Image, ImageTk
 from scipy.interpolate import splrep, splev
 from TkinterDnD2 import *
 
-from base_board import BaseBoard
+from base_board import BaseBoard, NoImageOnTheRightCanvasError
 from board_window import BoardWindow
 from config import PADY
 
@@ -17,9 +19,9 @@ from config import PADY
 class EditorBoard(BoardWindow):
 
     def create_board_variables(self):
-        self.noise_bool = tk.BooleanVar()
-        self.light_bool = tk.BooleanVar()
-        self.contrast_bool = tk.BooleanVar()
+        self.noise = tk.BooleanVar()
+        self.light = tk.BooleanVar()
+        self.contrast = tk.BooleanVar()
         self.angle_int = tk.IntVar()
         self.scale_double = tk.DoubleVar()
         self.xy_bool = tk.BooleanVar()
@@ -31,8 +33,8 @@ class EditorBoard(BoardWindow):
 
     def create_right_canvas(self, base_frame):
         self.right_canvas = RightCanvas(
-            base_frame, self.width_var, self.height_var, self.noise_bool, self.light_bool,
-            self.contrast_bool, self.scale_double, self.angle_int, self.xy_bool)
+            base_frame, self.width_var, self.height_var, self.noise, self.light,
+            self.contrast, self.scale_double, self.angle_int, self.xy_bool)
         self.right_canvas.grid(
             row=0, column=1, padx=(1, 5), pady=5, sticky=(tk.W, tk.E, tk.N, tk.S))
 
@@ -48,15 +50,10 @@ class EditorBoard(BoardWindow):
 
     def create_sepia_widgets(self, controller_frame):
         # sepia
-        check_noise = ttk.Checkbutton(
-            controller_frame, text='Noise', variable=self.noise_bool, onvalue=True, offvalue=False)
-        check_noise.pack(side=tk.RIGHT, pady=PADY, padx=(1, 1))
-        check_contrast = ttk.Checkbutton(
-            controller_frame, text='Contrast', variable=self.contrast_bool, onvalue=True, offvalue=False)
-        check_contrast.pack(side=tk.RIGHT, pady=PADY, padx=(1, 1))
-        check_light = ttk.Checkbutton(
-            controller_frame, text='Light', variable=self.light_bool, onvalue=True, offvalue=False)
-        check_light.pack(side=tk.RIGHT, pady=PADY, padx=(1, 1))
+        for text, variable in zip(['Noise', 'Contrast', 'Light'], [self.noise, self.contrast, self.light]):
+            check = ttk.Checkbutton(
+                controller_frame, text=text, variable=variable, onvalue=True, offvalue=False)
+            check.pack(side=tk.RIGHT, pady=PADY, padx=(1, 1))        
         sepia_button = ttk.Button(
             controller_frame, text='Sepia', command=self.right_canvas.show_sepia_image)
         sepia_button.pack(side=tk.RIGHT, pady=PADY, padx=(20, 1))
@@ -77,27 +74,22 @@ class EditorBoard(BoardWindow):
 
     def change_mode_widgets(self, controller_frame):
         # change BorderMode
-        scale_entry = ttk.Entry(controller_frame, width=5, textvariable=self.scale_double)
-        scale_entry.pack(side=tk.RIGHT, pady=PADY, padx=(1, 1))
-        scale_label = ttk.Label(controller_frame, text='Scale')
-        scale_label.pack(side=tk.RIGHT, pady=PADY, padx=(1, 1))
-        angle_entry = ttk.Entry(controller_frame, width=5, textvariable=self.angle_int)
-        angle_entry.pack(side=tk.RIGHT, pady=PADY, padx=(1, 1))
-        angle_label = ttk.Label(controller_frame, text='Angle')
-        angle_label.pack(side=tk.RIGHT, pady=PADY, padx=(1, 1))
+        for variable, text in zip([self.scale_double, self.angle_int], ['Scale', 'Angle']):
+            entry = ttk.Entry(controller_frame, width=5, textvariable=variable)
+            entry.pack(side=tk.RIGHT, pady=PADY, padx=(1, 1))
+            label = ttk.Label(controller_frame, text=text)
+            label.pack(side=tk.RIGHT, pady=PADY, padx=(1, 1))
         self.scale_double.set(0.5)
         self.angle_int.set(45)
-        repeat_button = ttk.Button(
-            controller_frame, text='Change Mode', command=self.right_canvas.change_border_mode)
-        repeat_button.pack(side=tk.RIGHT, pady=PADY, padx=(1, 1))
+        geometric_button = ttk.Button(
+            controller_frame, text='Geometric', command=self.right_canvas.change_border_mode)
+        geometric_button.pack(side=tk.RIGHT, pady=PADY, padx=(10, 1))
 
     def create_skew_widgets(self, controller_frame):
-        y_radio = ttk.Radiobutton(
-            controller_frame, text='Y', value=False, variable=self.xy_bool)
-        y_radio.pack(side=tk.RIGHT, pady=PADY, padx=(1, 10))
-        x_radio = ttk.Radiobutton(
-            controller_frame, text='X', value=True, variable=self.xy_bool)
-        x_radio.pack(side=tk.RIGHT, pady=PADY, padx=(1, 1))
+        for text, value in zip(['Y', 'X'], [False, True]):
+            radio = ttk.Radiobutton(
+                controller_frame, text=text, value=value, variable=self.xy_bool)
+            radio.pack(side=tk.RIGHT, pady=PADY, padx=(1, 1))    
         skew_button = ttk.Button(
             controller_frame, text='Skew', command=self.right_canvas.show_skewed_image)
         skew_button.pack(side=tk.RIGHT, pady=PADY, padx=(1, 1))
@@ -183,13 +175,12 @@ class RightCanvas(ConvertBoard):
         self.skew_angles = [15, 30, 45]
         self.skew_angle_id = -1
         self.modes = [
-            self.show_border_transparent,
-            lambda mode=cv2.BORDER_CONSTANT: self.show_geometric_image(mode),
-            lambda mode=cv2.BORDER_REPLICATE: self.show_geometric_image(mode),
-            lambda mode=cv2.BORDER_REFLECT: self.show_geometric_image(mode),
-            lambda mode=cv2.BORDER_WRAP: self.show_geometric_image(mode),
-            lambda mode=cv2.BORDER_REFLECT_101: self.show_geometric_image(mode),
-        ]
+            dict(borderMode=cv2.BORDER_TRANSPARENT, dst=None),
+            dict(borderMode=cv2.BORDER_CONSTANT),
+            dict(borderMode=cv2.BORDER_REPLICATE),
+            dict(borderMode=cv2.BORDER_REFLECT),
+            dict(borderMode=cv2.BORDER_WRAP),
+            dict(borderMode=cv2.BORDER_REFLECT_101)]
         self.mode_id = -1
         self.create_bind()
 
@@ -200,11 +191,22 @@ class RightCanvas(ConvertBoard):
         self.dnd_bind('<<DropLeave>>', self.drop_leave)
         self.dnd_bind('<<Drop>>', self.drop)
 
+    def conversion(convert_func):
+        @wraps(convert_func)
+        def _conversion(self, *args):
+            try:
+                if not self.img_path:
+                    raise NoImageOnTheRightCanvasError('No image on the right canvas.')
+                convert_func(self, *args)
+            except Exception as e:
+                messagebox.showerror('Error', e)
+        return _conversion
+
+    @conversion
     def show_gray_image(self):
-        if self.img_path:
-            self.current_img = cv2.cvtColor(self.source_img, cv2.COLOR_BGR2GRAY)
-            self.create_image_cv(self.current_img)
-            self.display_image_size(*self.current_img.shape[::-1])
+        self.current_img = cv2.cvtColor(self.source_img, cv2.COLOR_BGR2GRAY)
+        self.create_image_cv(self.current_img)
+        self.display_image_size(*self.current_img.shape[::-1])
 
     def correct_peripheral_light(self, img, gain_params):
         h, w = img.shape[:2]
@@ -227,35 +229,35 @@ class RightCanvas(ConvertBoard):
         tck = splrep(xs, ys)
         return splev(gray / 255, tck) * 255
 
+    @conversion
     def show_sepia_image(self):
-        if self.img_path:
-            gray = cv2.cvtColor(self.source_img, cv2.COLOR_BGR2GRAY)
-            if self.noise_bool.get():
-                gray = self.superimpose_noise(gray)
-            if self.contrast_bool.get():
-                gray = self.enhance_contrast(gray)
-            if self.light_bool.get():
-                gray = self.correct_peripheral_light(gray, -0.4).astype(np.uint8)
-            img_hsv = np.zeros_like(self.source_img)
-            img_hsv[:, :, 0] = np.full_like(img_hsv[:, :, 0], 15, dtype=np.uint8)
-            img_hsv[:, :, 1] = np.full_like(img_hsv[:, :, 1], 153, dtype=np.uint8)
-            img_hsv[:, :, 2] = gray
-            self.current_img = cv2.cvtColor(img_hsv, cv2.COLOR_HSV2BGR)
-            img_rgb = cv2.cvtColor(img_hsv, cv2.COLOR_HSV2RGB)
-            self.create_image_cv(img_rgb)
-            self.display_image_size(*self.current_img.shape[:-1][::-1])
+        gray = cv2.cvtColor(self.source_img, cv2.COLOR_BGR2GRAY)
+        if self.noise_bool.get():
+            gray = self.superimpose_noise(gray)
+        if self.contrast_bool.get():
+            gray = self.enhance_contrast(gray)
+        if self.light_bool.get():
+            gray = self.correct_peripheral_light(gray, -0.4).astype(np.uint8)
+        img_hsv = np.zeros_like(self.source_img)
+        img_hsv[:, :, 0] = np.full_like(img_hsv[:, :, 0], 15, dtype=np.uint8)
+        img_hsv[:, :, 1] = np.full_like(img_hsv[:, :, 1], 153, dtype=np.uint8)
+        img_hsv[:, :, 2] = gray
+        self.current_img = cv2.cvtColor(img_hsv, cv2.COLOR_HSV2BGR)
+        img_rgb = cv2.cvtColor(img_hsv, cv2.COLOR_HSV2RGB)
+        self.create_image_cv(img_rgb)
+        self.display_image_size(*self.current_img.shape[:-1][::-1])
 
+    @conversion
     def show_image_like_animation(self, k=30):
-        if self.img_path:
-            gray = cv2.cvtColor(self.source_img, cv2.COLOR_BGRA2GRAY)
-            edge = cv2.blur(gray, (3, 3))
-            edge = cv2.Canny(edge, 50, 150, apertureSize=3)
-            edge = cv2.cvtColor(edge, cv2.COLOR_GRAY2BGR)
-            img = cv2.pyrMeanShiftFiltering(self.source_img, 5, 20)
-            self.current_img = cv2.subtract(img, edge)
-            img_rgb = cv2.cvtColor(self.current_img, cv2.COLOR_BGR2RGB)
-            self.create_image_cv(img_rgb)
-            self.display_image_size(*self.current_img.shape[:-1][::-1])
+        gray = cv2.cvtColor(self.source_img, cv2.COLOR_BGRA2GRAY)
+        edge = cv2.blur(gray, (3, 3))
+        edge = cv2.Canny(edge, 50, 150, apertureSize=3)
+        edge = cv2.cvtColor(edge, cv2.COLOR_GRAY2BGR)
+        img = cv2.pyrMeanShiftFiltering(self.source_img, 5, 20)
+        self.current_img = cv2.subtract(img, edge)
+        img_rgb = cv2.cvtColor(self.current_img, cv2.COLOR_BGR2RGB)
+        self.create_image_cv(img_rgb)
+        self.display_image_size(*self.current_img.shape[:-1][::-1])
 
     def sub_color(self, img, k):
         z = img.reshape((-1, 3))
@@ -266,56 +268,36 @@ class RightCanvas(ConvertBoard):
         res = center[label.flatten()]
         return res.reshape((img.shape))
 
+    @conversion
     def show_pixel_art(self, alpha=2, k=4):
-        if self.img_path:
-            h, w, _ = self.source_img.shape
-            img = cv2.resize(self.source_img, (int(w * alpha), int(h * alpha)))
-            img = cv2.resize(img, (w, h), interpolation=cv2.INTER_NEAREST)
-            self.current_img = self.sub_color(img, k)
-            img_rgb = cv2.cvtColor(self.current_img, cv2.COLOR_BGR2RGB)
-            self.create_image_cv(img_rgb)
-            self.display_image_size(*self.current_img.shape[:-1][::-1])
-
-    def get_scale_and_angle(self):
-        try:
-            scale = self.scale_double.get()
-            angle = self.angle_int.get()
-        except Exception:
-            return None, None
-        else:
-            return scale, angle
+        h, w, _ = self.source_img.shape
+        img = cv2.resize(self.source_img, (int(w * alpha), int(h * alpha)))
+        img = cv2.resize(img, (w, h), interpolation=cv2.INTER_NEAREST)
+        self.current_img = self.sub_color(img, k)
+        img_rgb = cv2.cvtColor(self.current_img, cv2.COLOR_BGR2RGB)
+        self.create_image_cv(img_rgb)
+        self.display_image_size(*self.current_img.shape[:-1][::-1])
 
     def change_border_mode(self):
         self.mode_id += 1
         if self.mode_id >= len(self.modes):
             self.mode_id = 0
-        func = self.modes[self.mode_id]
-        func()
+        args = self.modes[self.mode_id]
+        self.show_geometric_image(args)
 
-    def show_border_transparent(self):
-        if self.img_path:
-            scale, angle = self.get_scale_and_angle()
-            if scale is not None and angle is not None:
-                dst = self.source_img // 4
-                h, w, _ = self.source_img.shape
-                mat = cv2.getRotationMatrix2D((w / 2, h / 2), angle, scale)
-                self.current_img = cv2.warpAffine(
-                    self.source_img, mat, (w, h), borderMode=cv2.BORDER_TRANSPARENT, dst=dst)
-                img_rgb = cv2.cvtColor(self.current_img, cv2.COLOR_BGR2RGB)
-                self.create_image_cv(img_rgb)
-                self.display_image_size(*self.current_img.shape[:-1][::-1])
-
-    def show_geometric_image(self, mode):
-        if self.img_path:
-            scale, angle = self.get_scale_and_angle()
-            if scale is not None and angle is not None:
-                h, w, _ = self.current_img.shape
-                mat = cv2.getRotationMatrix2D((w / 2, h / 2), angle, scale)
-                self.current_img = cv2.warpAffine(
-                    self.source_img, mat, (w, h), borderMode=mode)
-                img_rgb = cv2.cvtColor(self.current_img, cv2.COLOR_BGR2RGB)
-                self.create_image_cv(img_rgb)
-                self.display_image_size(*self.current_img.shape[:-1][::-1])
+    @conversion
+    def show_geometric_image(self, args):
+        scale = self.scale_double.get()
+        angle = self.angle_int.get()
+        if 'dst' in args:
+            args['dst'] = self.source_img // 4
+        h, w, _ = self.current_img.shape
+        mat = cv2.getRotationMatrix2D((w / 2, h / 2), angle, scale)
+        self.current_img = cv2.warpAffine(
+            self.source_img, mat, (w, h), **args)
+        img_rgb = cv2.cvtColor(self.current_img, cv2.COLOR_BGR2RGB)
+        self.create_image_cv(img_rgb)
+        self.display_image_size(*self.current_img.shape[:-1][::-1])
 
     def get_skew_angle(self):
         self.skew_angle_id += 1
@@ -323,20 +305,20 @@ class RightCanvas(ConvertBoard):
             self.skew_angle_id = 0
         return self.skew_angles[self.skew_angle_id]
 
+    @conversion
     def show_skewed_image(self):
-        if self.img_path:
-            skew_angle = self.get_skew_angle()
-            angle = math.tan(math.radians(skew_angle))
-            h, w, _ = self.source_img.shape
-            if self.xy_bool.get():
-                mat = np.array([[1, angle, 0], [0, 1, 0]], dtype=np.float32)
-                self.current_img = cv2.warpAffine(self.source_img, mat, (int(w + h * angle), h))
-            else:
-                mat = np.array([[1, 0, 0], [angle, 1, 0]], dtype=np.float32)
-                self.current_img = cv2.warpAffine(self.source_img, mat, (w, int(h + w * angle)))
-            img_rgb = cv2.cvtColor(self.current_img, cv2.COLOR_BGR2RGB)
-            self.create_image_cv(img_rgb)
-            self.display_image_size(*self.current_img.shape[:-1][::-1])
+        skew_angle = self.get_skew_angle()
+        angle = math.tan(math.radians(skew_angle))
+        h, w, _ = self.source_img.shape
+        if self.xy_bool.get():
+            mat = np.array([[1, angle, 0], [0, 1, 0]], dtype=np.float32)
+            self.current_img = cv2.warpAffine(self.source_img, mat, (int(w + h * angle), h))
+        else:
+            mat = np.array([[1, 0, 0], [angle, 1, 0]], dtype=np.float32)
+            self.current_img = cv2.warpAffine(self.source_img, mat, (w, int(h + w * angle)))
+        img_rgb = cv2.cvtColor(self.current_img, cv2.COLOR_BGR2RGB)
+        self.create_image_cv(img_rgb)
+        self.display_image_size(*self.current_img.shape[:-1][::-1])
 
     def drop_enter(self, event):
         event.widget.focus_force()

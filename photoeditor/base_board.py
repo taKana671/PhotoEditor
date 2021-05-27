@@ -15,6 +15,10 @@ class InvalidSizeError(Exception):
     pass
 
 
+class NoImageOnTheRightCanvasError(Exception):
+    pass
+
+
 class BaseBoard(tk.Canvas):
 
     drag_start = False

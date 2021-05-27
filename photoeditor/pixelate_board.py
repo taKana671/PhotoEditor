@@ -6,7 +6,6 @@ from pathlib import Path
 from tkinter import messagebox
 
 import cv2
-# import numpy as np
 from PIL import Image, ImageTk
 from scipy.interpolate import splrep, splev
 from TkinterDnD2 import *

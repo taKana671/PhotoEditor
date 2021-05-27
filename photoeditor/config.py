@@ -1,4 +1,5 @@
 FACE_CASCADE_PATH = 'haarcascades/haarcascade_frontalface_default.xml'
+EYE_CASCADE_PATH = 'haarcascades/haarcascade_eye.xml'
 
 BOARD_W = 600
 BOARD_H = 500
@@ -10,7 +11,7 @@ COMPOSITE = 'Composite'
 CONVERT = 'Convert'
 PIXELATE = 'Pixelate'
 
-EXTENSIONS = {'.bmp', '.tiff', '.jpg', '.png', '.PNG'}
+EXTENSIONS = {'.bmp', '.tiff', '.jpg', '.png', '.PNG', '.gif'}
 FILETYPES = [('jpg', '*.jpg'), ('png', '*.png')]
 
 PADY = (3, 10)
