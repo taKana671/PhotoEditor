@@ -10,9 +10,11 @@ from PIL import Image, ImageTk
 from scipy.interpolate import splrep, splev
 from TkinterDnD2 import *
 
-from base_board import BaseBoard
+from base_board import (BaseBoard, NoImageOnTheRightCanvasError, NotSelectedAreaError,
+    InvalidSizeError)
 from board_window import BoardWindow
-from config import PADY, FACE_CASCADE_PATH, EYE_CASCADE_PATH
+from config import (PADY, FACE_CASCADE_PATH, EYE_CASCADE_PATH, ERROR, RIGHT_CANVAS_MSG_1,
+    RIGHT_CANVAS_MSG_2, IMAGE_SIZE_MSG_1)
 
 
 Corner = namedtuple('Corner', 'x y')
@@ -59,19 +61,16 @@ class EditorBoard(BoardWindow):
         entire_button.pack(side=tk.RIGHT, pady=PADY, padx=(1, 1))
         area_button = ttk.Button(
             controller_frame, text='Area', command=self.right_canvas.show_pixelated_area)
-        area_button.pack(side=tk.RIGHT, pady=PADY, padx=(1, 1))
+        area_button.pack(side=tk.RIGHT, pady=PADY, padx=(20, 1))
 
     def create_detect_widgets(self, controller_frame):
-        min_neighbors = ttk.Entry(controller_frame, width=5, textvariable=self.min_neighbors)
-        min_neighbors.pack(side=tk.RIGHT, pady=PADY, padx=(1, 20))
-        neighbors_label = ttk.Label(controller_frame, text='minNeighbors:')
-        neighbors_label.pack(side=tk.RIGHT, pady=PADY, padx=(1, 1))
-        scale_factor = ttk.Entry(controller_frame, width=5, textvariable=self.scale_factor)
-        scale_factor.pack(side=tk.RIGHT, pady=PADY, padx=(1, 1))
-        factor_label = ttk.Label(controller_frame, text='scaleFactor:')
-        factor_label.pack(side=tk.RIGHT, pady=PADY, padx=(1, 1))
-        self.scale_factor.set(1.05)
-        self.min_neighbors.set(2)
+        for text_variable, text, value in zip(
+                [self.min_neighbors, self.scale_factor], ['minNeighbors:', 'scaleFactor:'], [3, 1.1]):
+            entry = ttk.Entry(controller_frame, width=5, textvariable=text_variable)
+            entry.pack(side=tk.RIGHT, pady=PADY, padx=(1, 1))
+            label = ttk.Label(controller_frame, text=text)
+            label.pack(side=tk.RIGHT, pady=PADY, padx=(1, 1))
+            text_variable.set(value)
         face_detect_button = ttk.Button(
             controller_frame, text='Face Detect', command=self.right_canvas.detect_face)
         face_detect_button.pack(side=tk.RIGHT, pady=PADY, padx=(1, 1))
@@ -184,15 +183,35 @@ class RightCanvas(PixelateBoard):
         self.bind('<Button3-Motion>', self.draw_rectangle)
         self.bind('<ButtonRelease-3>', self.end_drawing)
 
+    def pixelation(pattern=None):
+        def decorator(func):
+            @wraps(func)
+            def _pixelation(self, *args, **kwargs):
+                try:
+                    if not self.img_path:
+                        raise NoImageOnTheRightCanvasError(RIGHT_CANVAS_MSG_1)
+                    if pattern == 'area':
+                        if not self.corners:
+                            raise NotSelectedAreaError(RIGHT_CANVAS_MSG_2)
+                    if pattern == 'compare':
+                        left_img = args[0]
+                        if left_img.shape != self.source_img.shape:
+                            raise InvalidSizeError()(IMAGE_SIZE_MSG_1)
+                    func(self, *args, **kwargs)
+                except Exception as e:
+                    messagebox.showerror(ERROR, e)
+            return _pixelation
+        return decorator
+
     def pixelate(self, img, ratio):
         smaller = cv2.resize(
             img, None, fx=ratio, fy=ratio, interpolation=cv2.INTER_NEAREST)
         return cv2.resize(smaller, img.shape[:2][::-1], interpolation=cv2.INTER_NEAREST)
 
+    @pixelation()
     def show_pixelated_entire(self):
-        if self.img_path:
-            self.current_img = self.pixelate(self.source_img, self.ratio.get())
-            self.create_image_cv(self.current_img)
+        self.current_img = self.pixelate(self.source_img, self.ratio.get())
+        self.create_image_cv(self.current_img)
 
     def get_current_img_corners(self, corners):
         current_h, current_w = self.current_img.shape[:2]
@@ -203,14 +222,14 @@ class RightCanvas(PixelateBoard):
         for corner in corners:
             yield Corner(int(corner[0] * scale_x), int(corner[1] * scale_y))
 
+    @pixelation('area')
     def show_pixelated_area(self):
-        if self.corners:
-            left, right = self.corners
-            ratio = self.ratio.get()
-            self.current_img[left.y:right.y, left.x:right.x] = \
-                self.pixelate(self.current_img[left.y:right.y, left.x:right.x], ratio)
-            self.create_image_cv(self.current_img)
-            self.clear_rectangle()
+        left, right = self.corners
+        ratio = self.ratio.get()
+        self.current_img[left.y:right.y, left.x:right.x] = \
+            self.pixelate(self.current_img[left.y:right.y, left.x:right.x], ratio)
+        self.create_image_cv(self.current_img)
+        self.clear_rectangle()
 
     def _run_animated_gif(self, idx):
         """Run an animated gif one time.
@@ -224,10 +243,10 @@ class RightCanvas(PixelateBoard):
             return
         self.after(100, self._run_animated_gif, idx)
 
+    @pixelation()
     def run_animated_gif(self):
-        if self.img_path:
-            self.gif_imgs = self.create_animated_gif()
-            self.after(0, self._run_animated_gif, 0)
+        self.gif_imgs = self.create_animated_gif()
+        self.after(0, self._run_animated_gif, 0)
 
     def create_animated_gif(self):
         img = cv2.cvtColor(self.source_img, cv2.COLOR_BGR2RGB)
@@ -245,17 +264,7 @@ class RightCanvas(PixelateBoard):
             img_gray, scaleFactor=scale_factor, minNeighbors=min_neighbors)
         return faces, img_gray
 
-    def detection(func):
-        @wraps(func)
-        def decorator(self):
-            if self.img_path:
-                try:
-                    func(self)
-                except Exception as e:
-                    messagebox.showerror('error', e)
-        return decorator
-
-    @detection
+    @pixelation()
     def detect_face(self):
         scale_factor, min_neighbors = self.get_detect_args()
         faces, _ = self.get_faces(self.source_img, scale_factor, min_neighbors)
@@ -264,7 +273,7 @@ class RightCanvas(PixelateBoard):
                 self.current_img[y: y + h, x: x + w], 0.1)
         self.create_image_cv(self.current_img)
 
-    @detection
+    @pixelation()
     def detect_eye(self):
         scale_factor, min_neighbors = self.get_detect_args()
         faces, img_gray = self.get_faces(self.source_img, scale_factor, min_neighbors)
@@ -279,18 +288,17 @@ class RightCanvas(PixelateBoard):
                     face[ey: ey + eh, ex: ex + ew], 0.1)
         self.create_image_cv(self.current_img)
 
+    @pixelation('compare')
     def compare_images(self, left_img):
-        if left_img is not None and self.source_img is not None and \
-                left_img.shape == self.source_img.shape:
-            gray_img_ref = cv2.cvtColor(left_img, cv2.COLOR_BGRA2GRAY)
-            gray_img_comp = cv2.cvtColor(self.source_img, cv2.COLOR_BGR2GRAY)
-            img_diff = cv2.absdiff(gray_img_ref, gray_img_comp)
-            _, img_bin = cv2.threshold(img_diff, 50, 255, 0)
-            contours, _ = cv2.findContours(img_bin, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-            for contour in contours:
-                x, y, w, h = cv2.boundingRect(contour)
-                cv2.rectangle(self.current_img, (x, y), (x + w, y + h), (0, 255, 0), 1)
-            self.create_image_cv(self.current_img)
+        gray_img_ref = cv2.cvtColor(left_img, cv2.COLOR_BGRA2GRAY)
+        gray_img_comp = cv2.cvtColor(self.source_img, cv2.COLOR_BGR2GRAY)
+        img_diff = cv2.absdiff(gray_img_ref, gray_img_comp)
+        _, img_bin = cv2.threshold(img_diff, 50, 255, 0)
+        contours, _ = cv2.findContours(img_bin, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        for contour in contours:
+            x, y, w, h = cv2.boundingRect(contour)
+            cv2.rectangle(self.current_img, (x, y), (x + w, y + h), (0, 255, 0), 1)
+        self.create_image_cv(self.current_img)
 
     def drop_enter(self, event):
         event.widget.focus_force()

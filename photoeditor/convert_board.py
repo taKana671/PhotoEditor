@@ -13,7 +13,7 @@ from TkinterDnD2 import *
 
 from base_board import BaseBoard, NoImageOnTheRightCanvasError
 from board_window import BoardWindow
-from config import PADY
+from config import PADY, ERROR, RIGHT_CANVAS_MSG_1
 
 
 class EditorBoard(BoardWindow):
@@ -53,7 +53,7 @@ class EditorBoard(BoardWindow):
         for text, variable in zip(['Noise', 'Contrast', 'Light'], [self.noise, self.contrast, self.light]):
             check = ttk.Checkbutton(
                 controller_frame, text=text, variable=variable, onvalue=True, offvalue=False)
-            check.pack(side=tk.RIGHT, pady=PADY, padx=(1, 1))        
+            check.pack(side=tk.RIGHT, pady=PADY, padx=(1, 1))
         sepia_button = ttk.Button(
             controller_frame, text='Sepia', command=self.right_canvas.show_sepia_image)
         sepia_button.pack(side=tk.RIGHT, pady=PADY, padx=(20, 1))
@@ -89,7 +89,7 @@ class EditorBoard(BoardWindow):
         for text, value in zip(['Y', 'X'], [False, True]):
             radio = ttk.Radiobutton(
                 controller_frame, text=text, value=value, variable=self.xy_bool)
-            radio.pack(side=tk.RIGHT, pady=PADY, padx=(1, 1))    
+            radio.pack(side=tk.RIGHT, pady=PADY, padx=(1, 1))
         skew_button = ttk.Button(
             controller_frame, text='Skew', command=self.right_canvas.show_skewed_image)
         skew_button.pack(side=tk.RIGHT, pady=PADY, padx=(1, 1))
@@ -193,13 +193,13 @@ class RightCanvas(ConvertBoard):
 
     def conversion(convert_func):
         @wraps(convert_func)
-        def _conversion(self, *args):
+        def _conversion(self, *args, **kwargs):
             try:
                 if not self.img_path:
-                    raise NoImageOnTheRightCanvasError('No image on the right canvas.')
-                convert_func(self, *args)
+                    raise NoImageOnTheRightCanvasError(RIGHT_CANVAS_MSG_1)
+                convert_func(self, *args, **kwargs)
             except Exception as e:
-                messagebox.showerror('Error', e)
+                messagebox.showerror(ERROR, e)
         return _conversion
 
     @conversion

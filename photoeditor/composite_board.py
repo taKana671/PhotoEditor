@@ -196,7 +196,6 @@ class LeftCanvas(CompositeBoard):
         base = Image.new('L', self.current_img.size, 0)
         draw = ImageDraw.Draw(base)
         shape_type = self.which_shapes.get()
-        print(shape_type)
         if shape_type == 1:
             draw.ellipse(xy, fill=255)
         elif shape_type == 2:

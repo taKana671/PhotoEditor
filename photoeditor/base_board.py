@@ -19,6 +19,10 @@ class NoImageOnTheRightCanvasError(Exception):
     pass
 
 
+class NotSelectedAreaError(Exception):
+    pass
+
+
 class BaseBoard(tk.Canvas):
 
     drag_start = False
