@@ -10,10 +10,10 @@ from PIL import Image, ImageTk
 from scipy.interpolate import splrep, splev
 from TkinterDnD2 import *
 
-from base_board import (BaseBoard, NoImageOnTheRightCanvasError, NotSelectedAreaError,
+from base_board import (BaseBoard, NoImageOnTheCanvasError, NotSelectedAreaError,
     InvalidSizeError)
 from board_window import BoardWindow
-from config import (PADY, FACE_CASCADE_PATH, EYE_CASCADE_PATH, ERROR, RIGHT_CANVAS_MSG_1,
+from config import (PADY, PADX, FACE_CASCADE_PATH, EYE_CASCADE_PATH, ERROR, RIGHT_CANVAS_MSG_1,
     RIGHT_CANVAS_MSG_2, IMAGE_SIZE_MSG_1)
 
 
@@ -54,11 +54,11 @@ class EditorBoard(BoardWindow):
         for ratio in ratio_list:
             radio = ttk.Radiobutton(
                 controller_frame, text=str(ratio), value=ratio, variable=self.ratio)
-            radio.pack(side=tk.RIGHT, pady=PADY, padx=(1, 1))
+            radio.pack(side=tk.RIGHT, pady=PADY, padx=PADX)
         self.ratio.set(ratio_list[0])
         entire_button = ttk.Button(
             controller_frame, text='Entire', command=self.right_canvas.show_pixelated_entire)
-        entire_button.pack(side=tk.RIGHT, pady=PADY, padx=(1, 1))
+        entire_button.pack(side=tk.RIGHT, pady=PADY, padx=PADX)
         area_button = ttk.Button(
             controller_frame, text='Area', command=self.right_canvas.show_pixelated_area)
         area_button.pack(side=tk.RIGHT, pady=PADY, padx=(20, 1))
@@ -67,16 +67,16 @@ class EditorBoard(BoardWindow):
         for text_variable, text, value in zip(
                 [self.min_neighbors, self.scale_factor], ['minNeighbors:', 'scaleFactor:'], [3, 1.1]):
             entry = ttk.Entry(controller_frame, width=5, textvariable=text_variable)
-            entry.pack(side=tk.RIGHT, pady=PADY, padx=(1, 1))
+            entry.pack(side=tk.RIGHT, pady=PADY, padx=PADX)
             label = ttk.Label(controller_frame, text=text)
-            label.pack(side=tk.RIGHT, pady=PADY, padx=(1, 1))
+            label.pack(side=tk.RIGHT, pady=PADY, padx=PADX)
             text_variable.set(value)
         face_detect_button = ttk.Button(
             controller_frame, text='Face Detect', command=self.right_canvas.detect_face)
-        face_detect_button.pack(side=tk.RIGHT, pady=PADY, padx=(1, 1))
+        face_detect_button.pack(side=tk.RIGHT, pady=PADY, padx=PADX)
         eye_detect_button = ttk.Button(
             controller_frame, text='Eye Detect', command=self.right_canvas.detect_eye)
-        eye_detect_button.pack(side=tk.RIGHT, pady=PADY, padx=(1, 1))
+        eye_detect_button.pack(side=tk.RIGHT, pady=PADY, padx=PADX)
 
     def create_gif_widgets(self, controller_frame):
         save_gif_button = ttk.Button(
@@ -84,7 +84,7 @@ class EditorBoard(BoardWindow):
         save_gif_button.pack(side=tk.RIGHT, pady=PADY, padx=(1, 20))
         run_gif_button = ttk.Button(
             controller_frame, text='Run GIF', command=self.right_canvas.run_animated_gif)
-        run_gif_button.pack(side=tk.RIGHT, pady=PADY, padx=(1, 1))
+        run_gif_button.pack(side=tk.RIGHT, pady=PADY, padx=PADX)
 
     def compare_images_widgets(self, controller_frame):
         compare_button = ttk.Button(
@@ -189,7 +189,7 @@ class RightCanvas(PixelateBoard):
             def _pixelation(self, *args, **kwargs):
                 try:
                     if not self.img_path:
-                        raise NoImageOnTheRightCanvasError(RIGHT_CANVAS_MSG_1)
+                        raise NoImageOnTheCanvasError(RIGHT_CANVAS_MSG_1)
                     if pattern == 'area':
                         if not self.corners:
                             raise NotSelectedAreaError(RIGHT_CANVAS_MSG_2)

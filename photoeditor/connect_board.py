@@ -1,14 +1,16 @@
 import re
 import tkinter as tk
 import tkinter.ttk as ttk
+from functools import wraps
 from tkinter import messagebox
 
 from PIL import Image
 from TkinterDnD2 import *
 
-from base_board import BaseBoard, InvalidSizeError
+from base_board import (BaseBoard, InvalidSizeError, NoImageOnTheCanvasError,
+    TheNumberOfImagesError)
 from board_window import BoardWindow
-from config import PADY
+from config import PADX, PADY, ERROR, RIGHT_CANVAS_MSG_1, RIGHT_CANVAS_MSG_3, RIGHT_CANVAS_MSG_4
 
 
 class EditorBoard(BoardWindow):
@@ -25,7 +27,7 @@ class EditorBoard(BoardWindow):
 
     def create_right_canvas(self, base_frame):
         self.right_canvas = RightCanvas(
-            base_frame, self.width_var, self.height_var, self.col_var, self.row_var, self.radio_bool)
+            base_frame, self.width_var, self.height_var, self.row_var, self.col_var, self.radio_bool)
         self.right_canvas.grid(
             row=0, column=1, padx=(1, 5), pady=5, sticky=(tk.W, tk.E, tk.N, tk.S))
 
@@ -40,35 +42,30 @@ class EditorBoard(BoardWindow):
         self.create_clear_widgets(controller_frame)
 
     def create_repeat_widgets(self, controller_frame):
-        height_entry = ttk.Entry(
-            controller_frame, width=5, textvariable=self.row_var)
-        height_entry.pack(side=tk.RIGHT, pady=PADY, padx=(1, 10))
-        height_label = ttk.Label(controller_frame, text='x')
-        height_label.pack(side=tk.RIGHT, pady=PADY, padx=(1, 1))
-        width_entry = ttk.Entry(
-            controller_frame, width=5, textvariable=self.col_var)
-        width_entry.pack(side=tk.RIGHT, pady=PADY, padx=(5, 1))
+        for variable, text, default in zip(
+                [self.row_var, self.col_var], ['Rows:', 'Columns:'], [3, 4]):
+            entry = ttk.Entry(controller_frame, width=5, textvariable=variable)
+            entry.pack(side=tk.RIGHT, pady=PADY, padx=PADX)
+            label = ttk.Label(controller_frame, text=text)
+            label.pack(side=tk.RIGHT, pady=PADY, padx=PADX)
+            variable.set(default)
         concat_repeat_button = ttk.Button(
             controller_frame, text='Repeat', command=self.right_canvas.show_repeated_image)
-        concat_repeat_button.pack(side=tk.RIGHT, pady=PADY)
-        self.row_var.set(3)
-        self.col_var.set(4)
+        concat_repeat_button.pack(side=tk.RIGHT, pady=PADY, padx=(20, 1))
 
     def create_connect_widgets(self, controller_frame):
         # connect image
-        vertical_radio = ttk.Radiobutton(
-            controller_frame, text='Vertical', value=False, variable=self.radio_bool)
-        vertical_radio.pack(side=tk.RIGHT, pady=PADY, padx=(1, 10))
-        horizontal_radio = ttk.Radiobutton(
-            controller_frame, text='Horizontal', value=True, variable=self.radio_bool)
-        horizontal_radio.pack(side=tk.RIGHT, pady=PADY, padx=(1, 1))
+        for text, value in zip(['Vertical', 'Horizontal'], [False, True]):
+            radio = ttk.Radiobutton(
+                controller_frame, text=text, value=value, variable=self.radio_bool)
+            radio.pack(side=tk.RIGHT, pady=PADY, padx=PADX)
+        self.radio_bool.set(True)
         reset_button = ttk.Button(
             controller_frame, text='Reset', command=self.right_canvas.reset_image)
-        reset_button.pack(side=tk.RIGHT, pady=PADY, padx=(1, 1))
+        reset_button.pack(side=tk.RIGHT, pady=PADY, padx=PADX)
         concat_button = ttk.Button(
             controller_frame, text='Connect', command=self.right_canvas.show_concat_image)
         concat_button.pack(side=tk.RIGHT, pady=PADY)
-        self.radio_bool.set(True)
 
     def create_change_widgets(self, controller_frame):
         # change original images
@@ -80,7 +77,7 @@ class EditorBoard(BoardWindow):
         # clear original images
         clear_button = ttk.Button(
             controller_frame, text='Clear', command=self.left_canvas.clear_images)
-        clear_button.pack(side=tk.LEFT, pady=PADY, padx=1)
+        clear_button.pack(side=tk.LEFT, pady=PADY, padx=PADX)
 
 
 class ConnectBoard(BaseBoard):
@@ -167,7 +164,7 @@ class RightCanvas(ConnectBoard):
     """The right canvas to show a connected images.
     """
 
-    def __init__(self, master, width_var, height_var, col_var, row_var, radio_bool):
+    def __init__(self, master, width_var, height_var, row_var, col_var, radio_bool):
         super().__init__(master, width_var, height_var)
         self.col_var = col_var
         self.row_var = row_var
@@ -186,6 +183,25 @@ class RightCanvas(ConnectBoard):
         self.dnd_bind('<<DragInitCmd>>', self.drag_init)
         self.dnd_bind('<<DragEndCmd>>', self.drag_end)
 
+    def connecting(pattern=None):
+        def decorator(func, *args, **kwargs):
+            @wraps(func)
+            def _connecting(self, *args, **kwargs):
+                try:
+                    if self.current_img is None:
+                        raise NoImageOnTheCanvasError(RIGHT_CANVAS_MSG_1)
+                    if pattern == 'repeat':
+                        if not self.col_var.get() or not self.row_var:
+                            raise InvalidSizeError(RIGHT_CANVAS_MSG_3)
+                    if pattern == 'concat':
+                        if len(self.concat_imgs) < 2:
+                            raise TheNumberOfImagesError(RIGHT_CANVAS_MSG_4)
+                    func(self, *args, **kwargs)
+                except Exception as e:
+                    messagebox.showerror(ERROR, e)
+            return _connecting
+        return decorator
+
     def reset_image(self):
         self.delete('all')
         self.concat_imgs = []
@@ -203,20 +219,17 @@ class RightCanvas(ConnectBoard):
             base.paste(img, (0, y * img.height))
         return base
 
+    @connecting('repeat')
     def show_repeated_image(self):
-        try:
-            col = int(self.col_var.get())
-            row = int(self.row_var.get())
-            if not col or not row:
-                raise InvalidSizeError('Value of column or row is invalid.')
-            img = self.current_img.resize((self.current_img.width // col, self.current_img.height // row))
-            base_h = self.concat_horizontally_repeat(img, col)
-            self.current_img = self.concat_vertically_repeat(base_h, row)
-            self.concat_imgs = [self.current_img]
-            self.create_image_pil(self.current_img)
-            self.display_image_size(*self.current_img.size)
-        except Exception as e:
-            messagebox.showerror('Error', e)
+        col = int(self.col_var.get())
+        row = int(self.row_var.get())
+        img = self.current_img.resize(
+            (self.current_img.width // col, self.current_img.height // row))
+        base_h = self.concat_horizontally_repeat(img, col)
+        self.current_img = self.concat_vertically_repeat(base_h, row)
+        self.concat_imgs = [self.current_img]
+        self.create_image_pil(self.current_img)
+        self.display_image_size(*self.current_img.size)
 
     def concat_vertically(self, resample=Image.BICUBIC):
         min_width = min(img.width for img in self.concat_imgs)
@@ -244,15 +257,15 @@ class RightCanvas(ConnectBoard):
             pos_x += img.width
         return base
 
+    @connecting('concat')
     def show_concat_image(self):
-        if self.concat_imgs:
-            if self.radio_bool.get():
-                self.current_img = self.concat_horizontally()
-            else:
-                self.current_img = self.concat_vertically()
-            self.concat_imgs = [self.current_img]
-            self.create_image_pil(self.current_img)
-            self.display_image_size(*self.current_img.size)
+        if self.radio_bool.get():
+            self.current_img = self.concat_horizontally()
+        else:
+            self.current_img = self.concat_vertically()
+        self.concat_imgs = [self.current_img]
+        self.create_image_pil(self.current_img)
+        self.display_image_size(*self.current_img.size)
 
     def get_key(self):
         key_list = [k for k, v in ConnectBoard.sources.items() if v == self.current_img]

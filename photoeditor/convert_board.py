@@ -11,9 +11,9 @@ from PIL import Image, ImageTk
 from scipy.interpolate import splrep, splev
 from TkinterDnD2 import *
 
-from base_board import BaseBoard, NoImageOnTheRightCanvasError
+from base_board import BaseBoard, NoImageOnTheCanvasError
 from board_window import BoardWindow
-from config import PADY, ERROR, RIGHT_CANVAS_MSG_1
+from config import PADY, PADX, ERROR, RIGHT_CANVAS_MSG_1
 
 
 class EditorBoard(BoardWindow):
@@ -53,7 +53,7 @@ class EditorBoard(BoardWindow):
         for text, variable in zip(['Noise', 'Contrast', 'Light'], [self.noise, self.contrast, self.light]):
             check = ttk.Checkbutton(
                 controller_frame, text=text, variable=variable, onvalue=True, offvalue=False)
-            check.pack(side=tk.RIGHT, pady=PADY, padx=(1, 1))
+            check.pack(side=tk.RIGHT, pady=PADY, padx=PADX)
         sepia_button = ttk.Button(
             controller_frame, text='Sepia', command=self.right_canvas.show_sepia_image)
         sepia_button.pack(side=tk.RIGHT, pady=PADY, padx=(20, 1))
@@ -62,11 +62,11 @@ class EditorBoard(BoardWindow):
         # gray
         gray_button = ttk.Button(
             controller_frame, text='Gray', command=self.right_canvas.show_gray_image)
-        gray_button.pack(side=tk.RIGHT, pady=PADY, padx=(1, 1))
+        gray_button.pack(side=tk.RIGHT, pady=PADY, padx=PADX)
         # image like animation
         anime_button = ttk.Button(
             controller_frame, text='Anime', command=self.right_canvas.show_image_like_animation)
-        anime_button.pack(side=tk.RIGHT, pady=PADY, padx=(1, 1))
+        anime_button.pack(side=tk.RIGHT, pady=PADY, padx=PADX)
         # image like pixel art
         pixel_button = ttk.Button(
             controller_frame, text='Pixel', command=self.right_canvas.show_pixel_art)
@@ -76,9 +76,9 @@ class EditorBoard(BoardWindow):
         # change BorderMode
         for variable, text in zip([self.scale_double, self.angle_int], ['Scale', 'Angle']):
             entry = ttk.Entry(controller_frame, width=5, textvariable=variable)
-            entry.pack(side=tk.RIGHT, pady=PADY, padx=(1, 1))
+            entry.pack(side=tk.RIGHT, pady=PADY, padx=PADX)
             label = ttk.Label(controller_frame, text=text)
-            label.pack(side=tk.RIGHT, pady=PADY, padx=(1, 1))
+            label.pack(side=tk.RIGHT, pady=PADY, padx=PADX)
         self.scale_double.set(0.5)
         self.angle_int.set(45)
         geometric_button = ttk.Button(
@@ -89,10 +89,10 @@ class EditorBoard(BoardWindow):
         for text, value in zip(['Y', 'X'], [False, True]):
             radio = ttk.Radiobutton(
                 controller_frame, text=text, value=value, variable=self.xy_bool)
-            radio.pack(side=tk.RIGHT, pady=PADY, padx=(1, 1))
+            radio.pack(side=tk.RIGHT, pady=PADY, padx=PADX)
         skew_button = ttk.Button(
             controller_frame, text='Skew', command=self.right_canvas.show_skewed_image)
-        skew_button.pack(side=tk.RIGHT, pady=PADY, padx=(1, 1))
+        skew_button.pack(side=tk.RIGHT, pady=PADY, padx=PADX)
         self.xy_bool.set(True)
 
 
@@ -196,7 +196,7 @@ class RightCanvas(ConvertBoard):
         def _conversion(self, *args, **kwargs):
             try:
                 if not self.img_path:
-                    raise NoImageOnTheRightCanvasError(RIGHT_CANVAS_MSG_1)
+                    raise NoImageOnTheCanvasError(RIGHT_CANVAS_MSG_1)
                 convert_func(self, *args, **kwargs)
             except Exception as e:
                 messagebox.showerror(ERROR, e)

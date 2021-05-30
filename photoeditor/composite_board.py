@@ -2,6 +2,7 @@ import re
 import tkinter as tk
 import tkinter.ttk as ttk
 from collections import namedtuple
+from functools import wraps
 from pathlib import Path
 from tkinter import messagebox
 
@@ -9,9 +10,10 @@ from PIL import Image, ImageDraw, ImageFilter
 import numpy as np
 from TkinterDnD2 import *
 
-from base_board import BaseBoard
+from base_board import BaseBoard, NoImageOnTheCanvasError, NotSelectedAreaError
 from board_window import BoardWindow
-from config import PADY, BOARD_W, BOARD_H
+from config import (PADY, PADX, BOARD_W, BOARD_H, ERROR, LEFT_CANVAS_MSG_1,
+    LEFT_CANVAS_MSG_2, LEFT_CANVAS_MSG_3)
 
 
 Corner = namedtuple('Corner', 'x y')
@@ -20,8 +22,6 @@ Corner = namedtuple('Corner', 'x y')
 class EditorBoard(BoardWindow):
 
     def create_board_variables(self):
-        self.width_var = tk.StringVar()
-        self.height_var = tk.StringVar()
         self.is_blur = tk.BooleanVar()         # Whether blur check box in checked or not
         self.which_shapes = tk.IntVar()        # Which radio button is selected, rectangle or oval
 
@@ -53,7 +53,7 @@ class EditorBoard(BoardWindow):
     def create_clear_widgets(self, controller_frame):
         clear_button = ttk.Button(
             controller_frame, text='Clear', command=self.right_canvas.clear_image)
-        clear_button.pack(side=tk.RIGHT, pady=PADY, padx=(1, 1))
+        clear_button.pack(side=tk.RIGHT, pady=PADY, padx=PADX)
 
     def create_mask_widgets(self, controller_frame):
         reset_button = ttk.Button(
@@ -61,19 +61,19 @@ class EditorBoard(BoardWindow):
         reset_button.pack(side=tk.LEFT, pady=PADY, padx=(5, 1))
         create_mask_button = ttk.Button(
             controller_frame, text='Create', command=self.left_canvas.create_new_mask)
-        create_mask_button.pack(side=tk.LEFT, pady=PADY, padx=(1, 1))
+        create_mask_button.pack(side=tk.LEFT, pady=PADY, padx=PADX)
         for i, text in enumerate(['Oval', 'Rectangle', 'Corners'], 1):
             radio = ttk.Radiobutton(
                 controller_frame, text=text, value=i, variable=self.which_shapes)
-            radio.pack(side=tk.LEFT, pady=PADY, padx=(1, 1))
+            radio.pack(side=tk.LEFT, pady=PADY, padx=PADX)
         self.which_shapes.set(1)
         check_blur = ttk.Checkbutton(
             controller_frame, text='Blur', variable=self.is_blur, onvalue=True, offvalue=False)
-        check_blur.pack(side=tk.LEFT, pady=PADY, padx=(1, 1))
+        check_blur.pack(side=tk.LEFT, pady=PADY, padx=PADX)
         self.is_blur.set(True)
         mask_button = ttk.Button(
             controller_frame, text='Change', command=self.left_canvas.toggle_mask)
-        mask_button.pack(side=tk.LEFT, pady=PADY, padx=(1, 1))
+        mask_button.pack(side=tk.LEFT, pady=PADY, padx=PADX)
 
     def create_crop_widgets(self, controller_frame):
         crop_button = ttk.Button(
@@ -207,26 +207,35 @@ class LeftCanvas(CompositeBoard):
             base = base.filter(ImageFilter.GaussianBlur(blur))
         return base
 
-    def create_new_mask(self):
-        if self.corners:
-            if self.which_shapes.get() == 3 and len(self.corners) < 3:
-                messagebox.showerror('Error', 'Requires more than 3 corners')
-            else:
-                self.current_img = self.draw_shape()
-                self.delete_shapes()
-                self.create_image_pil(self.current_img)
-                CompositeBoard.holder[CompositeBoard.created_mask_id] = self.current_img
+    def shaping(func):
+        @wraps(func)
+        def _shaping(self, *args, **kwargs):
+            try:
+                if not self.img_path:
+                    raise NoImageOnTheCanvasError(LEFT_CANVAS_MSG_1)
+                if not self.corners:
+                    raise NotSelectedAreaError(LEFT_CANVAS_MSG_2)
+                if self.which_shapes.get() == 3 and len(self.corners) < 3:
+                    raise NotSelectedAreaError(LEFT_CANVAS_MSG_3)
+                func(self, *args, **kwargs)
+            except Exception as e:
+                messagebox.showerror(ERROR, e)
+        return _shaping
 
+    @shaping
+    def create_new_mask(self):
+        self.current_img = self.draw_shape()
+        self.delete_shapes()
+        self.create_image_pil(self.current_img)
+        CompositeBoard.holder[CompositeBoard.created_mask_id] = self.current_img
+
+    @shaping
     def crop_image(self):
-        if self.corners:
-            if self.which_shapes.get() == 3 and len(self.corners) < 3:
-                messagebox.showerror('Error', 'Requires more than 3 corners')
-            else:
-                base = self.draw_shape()
-                self.current_img.putalpha(base)
-                self.delete_shapes()
-                self.create_image_pil(self.current_img)
-                CompositeBoard.holder[CompositeBoard.cropped_image_id] = self.current_img
+        base = self.draw_shape()
+        self.current_img.putalpha(base)
+        self.delete_shapes()
+        self.create_image_pil(self.current_img)
+        CompositeBoard.holder[CompositeBoard.cropped_image_id] = self.current_img
 
     def get_key_from_holder(self):
         keys = [k for k, v in CompositeBoard.holder.items() if v == self.current_img]

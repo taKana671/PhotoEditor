@@ -1,7 +1,7 @@
 import tkinter as tk
 import tkinter.ttk as ttk
 
-from config import PADY
+from config import PADY, PADX
 
 
 class BoardWindow(ttk.Frame):
@@ -27,11 +27,11 @@ class BoardWindow(ttk.Frame):
         height_entry = ttk.Entry(controller_frame, width=5, textvariable=self.height_var)
         height_entry.pack(side=tk.RIGHT, pady=PADY, padx=(1, 5))
         height_label = ttk.Label(controller_frame, text='H:')
-        height_label.pack(side=tk.RIGHT, pady=PADY, padx=(1, 1))
+        height_label.pack(side=tk.RIGHT, pady=PADY, padx=PADX)
         width_entry = ttk.Entry(controller_frame, width=5, textvariable=self.width_var)
-        width_entry.pack(side=tk.RIGHT, pady=PADY, padx=(1, 1))
+        width_entry.pack(side=tk.RIGHT, pady=PADY, padx=PADX)
         width_label = ttk.Label(controller_frame, text='W:')
-        width_label.pack(side=tk.RIGHT, pady=PADY, padx=(1, 1))
+        width_label.pack(side=tk.RIGHT, pady=PADY, padx=PADX)
         save_button = ttk.Button(
             controller_frame, text='Save', command=command)
         save_button.pack(side=tk.RIGHT, pady=PADY, padx=(20, 1))
