@@ -30,7 +30,7 @@ Drag a source image into the left canvas from outside, then drag the source imag
 
 #### *Save* 
  
- * Input width and height.
+ * Input width and height more than 0.
  * Click [Save] button to save the image on the right canvas, then a file dialog box will appear.
 
 #### *Sepia*
@@ -67,7 +67,7 @@ Select or make a mask image on the left canvas. Drag two source images from outs
 
 #### *Save* 
 
- * Input width and height.
+ * Input width and height more than 0.
  * Click [Save] button to save the image on the right canvas, then a file dialog box will appear.
 
 #### *Clear*
@@ -102,12 +102,12 @@ Drag source images into the left canvas from outside, then drag them into the ri
 
 #### *Save* 
 
- * Input width and height.
+ * Input width and height more than 0.
  * Click [Save] button to save the image on the right canvas, then a file dialog box will appear.
 
 #### *Repeat*
 
- * Input the number of rows and columns.
+ * Input the number of rows and columns more than 0.
  * Click [Repeat] button to make the image on the right canvas repeated.
 
 #### *Connect*
@@ -132,7 +132,7 @@ Drag a source image into the left canvas from outside, then drag the source imag
 
 #### *Save* 
 
- * Input width and height.
+ * Input width and height more than 0.
  * Click [Save] button to save the image on the right canvas, then a file dialog box will appear.
 
 #### *Entire*
@@ -151,6 +151,8 @@ Drag a source image into the left canvas from outside, then drag the source imag
  * Click [Face Detect] button to pixelate faces in the image on the right canvas.
  * Click [Eye Detect] button to pixelate eyes in the image on the right canvas. 
  * If faild to detect, adjust scaleFactor and minNeighbors.
+ * scaleFacte is float and requires more than 1.0.
+ * minNeighbors is integer.
 
 #### *Make animated GIF*
 
