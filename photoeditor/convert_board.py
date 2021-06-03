@@ -82,7 +82,7 @@ class EditorBoard(BoardWindow):
         self.scale_double.set(0.5)
         self.angle_int.set(45)
         geometric_button = ttk.Button(
-            controller_frame, text='Geometric', command=self.right_canvas.change_border_mode)
+            controller_frame, text='Geometric', command=self.right_canvas.show_geometric_image)
         geometric_button.pack(side=tk.RIGHT, pady=PADY, padx=(10, 1))
 
     def create_skew_widgets(self, controller_frame):
@@ -278,20 +278,20 @@ class RightCanvas(ConvertBoard):
         self.create_image_cv(img_rgb)
         self.display_image_size(*self.current_img.shape[:-1][::-1])
 
-    def change_border_mode(self):
+    def get_border_mode(self):
         self.mode_id += 1
         if self.mode_id >= len(self.modes):
             self.mode_id = 0
-        args = self.modes[self.mode_id]
-        self.show_geometric_image(args)
+        return self.modes[self.mode_id]
 
     @conversion
-    def show_geometric_image(self, args):
+    def show_geometric_image(self):
         scale = self.scale_double.get()
         angle = self.angle_int.get()
+        args = self.get_border_mode()
         if 'dst' in args:
             args['dst'] = self.source_img // 4
-        h, w, _ = self.current_img.shape
+        h, w, _ = self.source_img.shape
         mat = cv2.getRotationMatrix2D((w / 2, h / 2), angle, scale)
         self.current_img = cv2.warpAffine(
             self.source_img, mat, (w, h), **args)

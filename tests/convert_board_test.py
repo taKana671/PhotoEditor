@@ -73,6 +73,7 @@ class ShowGrayImageTestCase(ConvertBoardTestCase):
 class ShowImageLikeAnimationTestCase(ConvertBoardTestCase):
     """Test for show_image_like_animation
     """
+
     @mock.patch('convert_board.RightCanvas.display_image_size')
     @mock.patch('convert_board.RightCanvas.create_image_cv')
     @mock.patch('convert_board.messagebox.showerror')
@@ -107,6 +108,7 @@ class ShowImageLikeAnimationTestCase(ConvertBoardTestCase):
 class ShowSepiaImageTestCase(ConvertBoardTestCase):
     """Test for show_sepia_image
     """
+
     @mock.patch('convert_board.RightCanvas.display_image_size')
     @mock.patch('convert_board.RightCanvas.create_image_cv')
     @mock.patch('convert_board.messagebox.showerror')
@@ -253,6 +255,115 @@ class ShowPixelArtTestCase(ConvertBoardTestCase):
             with mock.patch.object(self.editor.right_canvas, 'source_img', self.test_img):
                 self.editor.right_canvas.show_pixel_art()
         mock_create_image_cv.assert_called_once()
+        mock_display_image_size.assert_called_once_with(self.width, self.height)
+        mock_msgbox.assert_not_called()
+
+
+class ShowGeometricImageTestCase(ConvertBoardTestCase):
+    """Test for show_geometric_image
+    """
+
+    @mock.patch('convert_board.RightCanvas.display_image_size')
+    @mock.patch('convert_board.RightCanvas.create_image_cv')
+    @mock.patch('convert_board.messagebox.showerror')
+    def test_image_path_is_None(self, mock_msgbox, mock_create_image_cv, mock_display_image_size):
+        """Check that the display of a converted image fails
+           when Geometric button is clicked and img_path is None.
+        """
+        self.editor.right_canvas.show_geometric_image()
+        mock_create_image_cv.assert_not_called()
+        mock_display_image_size.assert_not_called()
+        mock_msgbox.assert_called_once()
+        # error message
+        call_args = mock_msgbox.call_args_list[0]
+        self.assertEqual(call_args[0][0], ERROR)
+        self.assertEqual(str(call_args[0][1]), RIGHT_CANVAS_MSG_1)
+
+    @mock.patch('convert_board.RightCanvas.display_image_size')
+    @mock.patch('convert_board.RightCanvas.create_image_cv')
+    @mock.patch('convert_board.messagebox.showerror')
+    def test_scale_entry_is_empty(self, mock_msgbox, mock_create_image_cv, mock_display_image_size):
+        """Check that the display of a converted image fails
+           when Geometric button is clicked and scale entry is empty.
+        """
+        mock_double_var = mock.MagicMock()
+        msg = 'expected floating-point number but got ""'
+        mock_double_var.get.side_effect = tk._tkinter.TclError(msg)
+        mock_scale = mock_double_var
+        with mock.patch.object(self.editor.right_canvas, 'img_path', self.test_path):
+            with mock.patch.object(self.editor.right_canvas, 'source_img', self.test_img):
+                with mock.patch.object(self.editor.right_canvas, 'scale_double', mock_scale):
+                    self.editor.right_canvas.show_geometric_image()
+        # error message
+        mock_create_image_cv.assert_not_called()
+        mock_display_image_size.assert_not_called()
+        call_args = mock_msgbox.call_args_list[0]
+        self.assertEqual(call_args[0][0], ERROR)
+        self.assertEqual(str(call_args[0][1]), msg)
+
+    @mock.patch('convert_board.RightCanvas.display_image_size')
+    @mock.patch('convert_board.RightCanvas.create_image_cv')
+    @mock.patch('convert_board.messagebox.showerror')
+    def test_angle_engry_is_empty(self, mock_msgbox, mock_create_image_cv, mock_display_image_size):
+        """Check that the display of a converted image fails
+           when Geometric button is clicked and angle entry is empty.
+        """
+        mock_int_var = mock.MagicMock()
+        msg = 'expected intger-point number but got "0,2"'
+        mock_int_var.get.side_effect = tk._tkinter.TclError(msg)
+        mock_angle = mock_int_var
+        with mock.patch.object(self.editor.right_canvas, 'img_path', self.test_path):
+            with mock.patch.object(self.editor.right_canvas, 'source_img', self.test_img):
+                with mock.patch.object(self.editor.right_canvas, 'angle_int', mock_angle):
+                    self.editor.right_canvas.show_geometric_image()
+        # error message
+        mock_create_image_cv.assert_not_called()
+        mock_display_image_size.assert_not_called()
+        call_args = mock_msgbox.call_args_list[0]
+        self.assertEqual(call_args[0][0], ERROR)
+        self.assertEqual(str(call_args[0][1]), msg)
+
+    @mock.patch('convert_board.RightCanvas.get_border_mode')
+    @mock.patch('convert_board.RightCanvas.display_image_size')
+    @mock.patch('convert_board.RightCanvas.create_image_cv')
+    @mock.patch('convert_board.messagebox.showerror')
+    def test_args_containing_dst(self, mock_msgbox, mock_create_image_cv,
+                                 mock_display_image_size, get_mode):
+        """Check that the display of a converted image fails
+           when Geometric button is clicked and args contains dst.
+        """
+        mat = cv2.getRotationMatrix2D((self.width / 2, self.height / 2), 45, 0.5)
+        img = cv2.warpAffine(
+            self.test_img, mat, (self.width, self.height), borderMode=cv2.BORDER_TRANSPARENT, dst=self.test_img // 4)
+        img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        get_mode.return_value = dict(borderMode=cv2.BORDER_TRANSPARENT, dst=None)
+        with mock.patch.object(self.editor.right_canvas, 'img_path', self.test_path):
+            with mock.patch.object(self.editor.right_canvas, 'source_img', self.test_img):
+                self.editor.right_canvas.show_geometric_image()
+        self.assertTrue(
+            (mock_create_image_cv.call_args_list[0][0] == img_rgb).all())
+        mock_display_image_size.assert_called_once_with(self.width, self.height)
+        mock_msgbox.assert_not_called()
+
+    @mock.patch('convert_board.RightCanvas.get_border_mode')
+    @mock.patch('convert_board.RightCanvas.display_image_size')
+    @mock.patch('convert_board.RightCanvas.create_image_cv')
+    @mock.patch('convert_board.messagebox.showerror')
+    def test_args_not_containing_dst(self, mock_msgbox, mock_create_image_cv,
+                                     mock_display_image_size, get_mode):
+        """Check that the display of a converted image fails
+           when Geometric button is clicked.
+        """
+        mat = cv2.getRotationMatrix2D((self.width / 2, self.height / 2), 45, 0.5)
+        img = cv2.warpAffine(
+            self.test_img, mat, (self.width, self.height), borderMode=cv2.BORDER_CONSTANT)
+        img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        get_mode.return_value = dict(borderMode=cv2.BORDER_CONSTANT)
+        with mock.patch.object(self.editor.right_canvas, 'img_path', self.test_path):
+            with mock.patch.object(self.editor.right_canvas, 'source_img', self.test_img):
+                self.editor.right_canvas.show_geometric_image()
+        self.assertTrue(
+            (mock_create_image_cv.call_args_list[0][0] == img_rgb).all())
         mock_display_image_size.assert_called_once_with(self.width, self.height)
         mock_msgbox.assert_not_called()
 
