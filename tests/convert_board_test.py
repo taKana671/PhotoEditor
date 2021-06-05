@@ -1,15 +1,18 @@
 import os
 import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+sys.path.append(os.path.join(os.path.dirname(__file__), '../photoeditor'))
 
+import math
 import tkinter as tk
 from pathlib import Path
 from unittest import TestCase, mock, main
 
 import cv2
+import numpy as np
 from TkinterDnD2 import *
 
-from convert_board import EditorBoard, ERROR, RIGHT_CANVAS_MSG_1
+from photoeditor.convert_board import EditorBoard, ERROR, RIGHT_CANVAS_MSG_1
 
 
 class ConvertBoardTestCase(TestCase):
@@ -37,9 +40,9 @@ class ShowGrayImageTestCase(ConvertBoardTestCase):
     """Test for show_gray_image
     """
 
-    @mock.patch('convert_board.RightCanvas.display_image_size')
-    @mock.patch('convert_board.RightCanvas.create_image_cv')
-    @mock.patch('convert_board.messagebox.showerror')
+    @mock.patch('photoeditor.convert_board.RightCanvas.display_image_size')
+    @mock.patch('photoeditor.convert_board.RightCanvas.create_image_cv')
+    @mock.patch('photoeditor.convert_board.messagebox.showerror')
     def test_image_path_is_None(self, mock_msgbox, mock_create_image_cv, mock_display_image_size):
         """Check that the display of a converted image fails
            when Gray button is clicked and img_path is None.
@@ -53,9 +56,9 @@ class ShowGrayImageTestCase(ConvertBoardTestCase):
         self.assertEqual(call_args[0][0], ERROR)
         self.assertEqual(str(call_args[0][1]), RIGHT_CANVAS_MSG_1)
 
-    @mock.patch('convert_board.RightCanvas.display_image_size')
-    @mock.patch('convert_board.RightCanvas.create_image_cv')
-    @mock.patch('convert_board.messagebox.showerror')
+    @mock.patch('photoeditor.convert_board.RightCanvas.display_image_size')
+    @mock.patch('photoeditor.convert_board.RightCanvas.create_image_cv')
+    @mock.patch('photoeditor.convert_board.messagebox.showerror')
     def test_image_path_is_not_none(self, mock_msgbox, mock_create_image_cv, mock_display_image_size):
         """Check that gray image is displayed successfully
            when Gray button is clicked and img_path is not None.
@@ -74,9 +77,9 @@ class ShowImageLikeAnimationTestCase(ConvertBoardTestCase):
     """Test for show_image_like_animation
     """
 
-    @mock.patch('convert_board.RightCanvas.display_image_size')
-    @mock.patch('convert_board.RightCanvas.create_image_cv')
-    @mock.patch('convert_board.messagebox.showerror')
+    @mock.patch('photoeditor.convert_board.RightCanvas.display_image_size')
+    @mock.patch('photoeditor.convert_board.RightCanvas.create_image_cv')
+    @mock.patch('photoeditor.convert_board.messagebox.showerror')
     def test_image_path_is_None(self, mock_msgbox, mock_create_image_cv, mock_display_image_size):
         """Check that the display of a converted image fails
            when Anime button is clicked and img_path is None.
@@ -90,9 +93,9 @@ class ShowImageLikeAnimationTestCase(ConvertBoardTestCase):
         self.assertEqual(call_args[0][0], ERROR)
         self.assertEqual(str(call_args[0][1]), RIGHT_CANVAS_MSG_1)
 
-    @mock.patch('convert_board.RightCanvas.display_image_size')
-    @mock.patch('convert_board.RightCanvas.create_image_cv')
-    @mock.patch('convert_board.messagebox.showerror')
+    @mock.patch('photoeditor.convert_board.RightCanvas.display_image_size')
+    @mock.patch('photoeditor.convert_board.RightCanvas.create_image_cv')
+    @mock.patch('photoeditor.convert_board.messagebox.showerror')
     def test_image_path_is_not_none(self, mock_msgbox, mock_create_image_cv, mock_display_image_size):
         """Check that the converted image is displayed successfully
            when Anime button is clicked and img_path is not None.
@@ -109,9 +112,9 @@ class ShowSepiaImageTestCase(ConvertBoardTestCase):
     """Test for show_sepia_image
     """
 
-    @mock.patch('convert_board.RightCanvas.display_image_size')
-    @mock.patch('convert_board.RightCanvas.create_image_cv')
-    @mock.patch('convert_board.messagebox.showerror')
+    @mock.patch('photoeditor.convert_board.RightCanvas.display_image_size')
+    @mock.patch('photoeditor.convert_board.RightCanvas.create_image_cv')
+    @mock.patch('photoeditor.convert_board.messagebox.showerror')
     def test_image_path_is_None(self, mock_msgbox, mock_create_image_cv, mock_display_image_size):
         """Check that the display of a converted image fails
            when Sepia button is clicked and img_path is None.
@@ -125,12 +128,12 @@ class ShowSepiaImageTestCase(ConvertBoardTestCase):
         self.assertEqual(call_args[0][0], ERROR)
         self.assertEqual(str(call_args[0][1]), RIGHT_CANVAS_MSG_1)
 
-    @mock.patch('convert_board.RightCanvas.correct_peripheral_light')
-    @mock.patch('convert_board.RightCanvas.enhance_contrast')
-    @mock.patch('convert_board.RightCanvas.superimpose_noise')
-    @mock.patch('convert_board.RightCanvas.display_image_size')
-    @mock.patch('convert_board.RightCanvas.create_image_cv')
-    @mock.patch('convert_board.messagebox.showerror')
+    @mock.patch('photoeditor.convert_board.RightCanvas.correct_peripheral_light')
+    @mock.patch('photoeditor.convert_board.RightCanvas.enhance_contrast')
+    @mock.patch('photoeditor.convert_board.RightCanvas.superimpose_noise')
+    @mock.patch('photoeditor.convert_board.RightCanvas.display_image_size')
+    @mock.patch('photoeditor.convert_board.RightCanvas.create_image_cv')
+    @mock.patch('photoeditor.convert_board.messagebox.showerror')
     def test_no_checkbox_are_checked(self, mock_msgbox, mock_create_image_cv, mock_display_image_size,
                                      mock_impose, mock_contrast, mock_light):
         """Check that the display of a converted image
@@ -146,12 +149,12 @@ class ShowSepiaImageTestCase(ConvertBoardTestCase):
             mock_create_image_cv.assert_called_once()
             mock_display_image_size.assert_called_once_with(self.width, self.height)
 
-    @mock.patch('convert_board.RightCanvas.correct_peripheral_light')
-    @mock.patch('convert_board.RightCanvas.enhance_contrast')
-    @mock.patch('convert_board.RightCanvas.superimpose_noise')
-    @mock.patch('convert_board.RightCanvas.display_image_size')
-    @mock.patch('convert_board.RightCanvas.create_image_cv')
-    @mock.patch('convert_board.messagebox.showerror')
+    @mock.patch('photoeditor.convert_board.RightCanvas.correct_peripheral_light')
+    @mock.patch('photoeditor.convert_board.RightCanvas.enhance_contrast')
+    @mock.patch('photoeditor.convert_board.RightCanvas.superimpose_noise')
+    @mock.patch('photoeditor.convert_board.RightCanvas.display_image_size')
+    @mock.patch('photoeditor.convert_board.RightCanvas.create_image_cv')
+    @mock.patch('photoeditor.convert_board.messagebox.showerror')
     def test_noise_checkbox_is_checked(self, mock_msgbox, mock_create_image_cv, mock_display_image_size,
                                        mock_impose, mock_contrast, mock_light):
         """Check that the display of a converted image
@@ -172,12 +175,12 @@ class ShowSepiaImageTestCase(ConvertBoardTestCase):
         mock_create_image_cv.assert_called_once()
         mock_display_image_size.assert_called_once_with(self.width, self.height)
 
-    @mock.patch('convert_board.RightCanvas.correct_peripheral_light')
-    @mock.patch('convert_board.RightCanvas.enhance_contrast')
-    @mock.patch('convert_board.RightCanvas.superimpose_noise')
-    @mock.patch('convert_board.RightCanvas.display_image_size')
-    @mock.patch('convert_board.RightCanvas.create_image_cv')
-    @mock.patch('convert_board.messagebox.showerror')
+    @mock.patch('photoeditor.convert_board.RightCanvas.correct_peripheral_light')
+    @mock.patch('photoeditor.convert_board.RightCanvas.enhance_contrast')
+    @mock.patch('photoeditor.convert_board.RightCanvas.superimpose_noise')
+    @mock.patch('photoeditor.convert_board.RightCanvas.display_image_size')
+    @mock.patch('photoeditor.convert_board.RightCanvas.create_image_cv')
+    @mock.patch('photoeditor.convert_board.messagebox.showerror')
     def test_light_checkbox_is_checked(self, mock_msgbox, mock_create_image_cv, mock_display_image_size,
                                        mock_impose, mock_contrast, mock_light):
         """Check that the display of a converted image
@@ -198,12 +201,12 @@ class ShowSepiaImageTestCase(ConvertBoardTestCase):
         mock_create_image_cv.assert_called_once()
         mock_display_image_size.assert_called_once_with(self.width, self.height)
 
-    @mock.patch('convert_board.RightCanvas.correct_peripheral_light')
-    @mock.patch('convert_board.RightCanvas.enhance_contrast')
-    @mock.patch('convert_board.RightCanvas.superimpose_noise')
-    @mock.patch('convert_board.RightCanvas.display_image_size')
-    @mock.patch('convert_board.RightCanvas.create_image_cv')
-    @mock.patch('convert_board.messagebox.showerror')
+    @mock.patch('photoeditor.convert_board.RightCanvas.correct_peripheral_light')
+    @mock.patch('photoeditor.convert_board.RightCanvas.enhance_contrast')
+    @mock.patch('photoeditor.convert_board.RightCanvas.superimpose_noise')
+    @mock.patch('photoeditor.convert_board.RightCanvas.display_image_size')
+    @mock.patch('photoeditor.convert_board.RightCanvas.create_image_cv')
+    @mock.patch('photoeditor.convert_board.messagebox.showerror')
     def test_contrast_checkbox_is_checked(self, mock_msgbox, mock_create_image_cv, mock_display_image_size,
                                           mock_impose, mock_contrast, mock_light):
         """Check that the display of a converted image
@@ -228,9 +231,9 @@ class ShowSepiaImageTestCase(ConvertBoardTestCase):
 class ShowPixelArtTestCase(ConvertBoardTestCase):
     """Test for show_pixel_art
     """
-    @mock.patch('convert_board.RightCanvas.display_image_size')
-    @mock.patch('convert_board.RightCanvas.create_image_cv')
-    @mock.patch('convert_board.messagebox.showerror')
+    @mock.patch('photoeditor.convert_board.RightCanvas.display_image_size')
+    @mock.patch('photoeditor.convert_board.RightCanvas.create_image_cv')
+    @mock.patch('photoeditor.convert_board.messagebox.showerror')
     def test_image_path_is_None(self, mock_msgbox, mock_create_image_cv, mock_display_image_size):
         """Check that the display of a converted image fails
            when Pixel button is clicked and img_path is None.
@@ -244,9 +247,9 @@ class ShowPixelArtTestCase(ConvertBoardTestCase):
         self.assertEqual(call_args[0][0], ERROR)
         self.assertEqual(str(call_args[0][1]), RIGHT_CANVAS_MSG_1)
 
-    @mock.patch('convert_board.RightCanvas.display_image_size')
-    @mock.patch('convert_board.RightCanvas.create_image_cv')
-    @mock.patch('convert_board.messagebox.showerror')
+    @mock.patch('photoeditor.convert_board.RightCanvas.display_image_size')
+    @mock.patch('photoeditor.convert_board.RightCanvas.create_image_cv')
+    @mock.patch('photoeditor.convert_board.messagebox.showerror')
     def test_image_path_is_not_none(self, mock_msgbox, mock_create_image_cv, mock_display_image_size):
         """Check that the converted image is displayed
            when Pixel button is clicked and img_path is not None.
@@ -263,9 +266,9 @@ class ShowGeometricImageTestCase(ConvertBoardTestCase):
     """Test for show_geometric_image
     """
 
-    @mock.patch('convert_board.RightCanvas.display_image_size')
-    @mock.patch('convert_board.RightCanvas.create_image_cv')
-    @mock.patch('convert_board.messagebox.showerror')
+    @mock.patch('photoeditor.convert_board.RightCanvas.display_image_size')
+    @mock.patch('photoeditor.convert_board.RightCanvas.create_image_cv')
+    @mock.patch('photoeditor.convert_board.messagebox.showerror')
     def test_image_path_is_None(self, mock_msgbox, mock_create_image_cv, mock_display_image_size):
         """Check that the display of a converted image fails
            when Geometric button is clicked and img_path is None.
@@ -279,9 +282,9 @@ class ShowGeometricImageTestCase(ConvertBoardTestCase):
         self.assertEqual(call_args[0][0], ERROR)
         self.assertEqual(str(call_args[0][1]), RIGHT_CANVAS_MSG_1)
 
-    @mock.patch('convert_board.RightCanvas.display_image_size')
-    @mock.patch('convert_board.RightCanvas.create_image_cv')
-    @mock.patch('convert_board.messagebox.showerror')
+    @mock.patch('photoeditor.convert_board.RightCanvas.display_image_size')
+    @mock.patch('photoeditor.convert_board.RightCanvas.create_image_cv')
+    @mock.patch('photoeditor.convert_board.messagebox.showerror')
     def test_scale_entry_is_empty(self, mock_msgbox, mock_create_image_cv, mock_display_image_size):
         """Check that the display of a converted image fails
            when Geometric button is clicked and scale entry is empty.
@@ -301,9 +304,9 @@ class ShowGeometricImageTestCase(ConvertBoardTestCase):
         self.assertEqual(call_args[0][0], ERROR)
         self.assertEqual(str(call_args[0][1]), msg)
 
-    @mock.patch('convert_board.RightCanvas.display_image_size')
-    @mock.patch('convert_board.RightCanvas.create_image_cv')
-    @mock.patch('convert_board.messagebox.showerror')
+    @mock.patch('photoeditor.convert_board.RightCanvas.display_image_size')
+    @mock.patch('photoeditor.convert_board.RightCanvas.create_image_cv')
+    @mock.patch('photoeditor.convert_board.messagebox.showerror')
     def test_angle_engry_is_empty(self, mock_msgbox, mock_create_image_cv, mock_display_image_size):
         """Check that the display of a converted image fails
            when Geometric button is clicked and angle entry is empty.
@@ -323,10 +326,10 @@ class ShowGeometricImageTestCase(ConvertBoardTestCase):
         self.assertEqual(call_args[0][0], ERROR)
         self.assertEqual(str(call_args[0][1]), msg)
 
-    @mock.patch('convert_board.RightCanvas.get_border_mode')
-    @mock.patch('convert_board.RightCanvas.display_image_size')
-    @mock.patch('convert_board.RightCanvas.create_image_cv')
-    @mock.patch('convert_board.messagebox.showerror')
+    @mock.patch('photoeditor.convert_board.RightCanvas.get_border_mode')
+    @mock.patch('photoeditor.convert_board.RightCanvas.display_image_size')
+    @mock.patch('photoeditor.convert_board.RightCanvas.create_image_cv')
+    @mock.patch('photoeditor.convert_board.messagebox.showerror')
     def test_args_containing_dst(self, mock_msgbox, mock_create_image_cv,
                                  mock_display_image_size, get_mode):
         """Check that the display of a converted image fails
@@ -345,10 +348,10 @@ class ShowGeometricImageTestCase(ConvertBoardTestCase):
         mock_display_image_size.assert_called_once_with(self.width, self.height)
         mock_msgbox.assert_not_called()
 
-    @mock.patch('convert_board.RightCanvas.get_border_mode')
-    @mock.patch('convert_board.RightCanvas.display_image_size')
-    @mock.patch('convert_board.RightCanvas.create_image_cv')
-    @mock.patch('convert_board.messagebox.showerror')
+    @mock.patch('photoeditor.convert_board.RightCanvas.get_border_mode')
+    @mock.patch('photoeditor.convert_board.RightCanvas.display_image_size')
+    @mock.patch('photoeditor.convert_board.RightCanvas.create_image_cv')
+    @mock.patch('photoeditor.convert_board.messagebox.showerror')
     def test_args_not_containing_dst(self, mock_msgbox, mock_create_image_cv,
                                      mock_display_image_size, get_mode):
         """Check that the display of a converted image fails
@@ -366,6 +369,94 @@ class ShowGeometricImageTestCase(ConvertBoardTestCase):
             (mock_create_image_cv.call_args_list[0][0] == img_rgb).all())
         mock_display_image_size.assert_called_once_with(self.width, self.height)
         mock_msgbox.assert_not_called()
+
+
+class ShowSkewesImageTestCase(ConvertBoardTestCase):
+    """Test for show_skews_image
+    """
+
+    @mock.patch('photoeditor.convert_board.RightCanvas.display_image_size')
+    @mock.patch('photoeditor.convert_board.RightCanvas.create_image_cv')
+    @mock.patch('photoeditor.convert_board.messagebox.showerror')
+    def test_image_path_is_None(self, mock_msgbox, mock_create_image_cv, mock_display_image_size):
+        """Check that the display of a converted image fails
+           when Geometric button is clicked and img_path is None.
+        """
+        self.editor.right_canvas.show_skewed_image()
+        mock_create_image_cv.assert_not_called()
+        mock_display_image_size.assert_not_called()
+        mock_msgbox.assert_called_once()
+        # error message
+        call_args = mock_msgbox.call_args_list[0]
+        self.assertEqual(call_args[0][0], ERROR)
+        self.assertEqual(str(call_args[0][1]), RIGHT_CANVAS_MSG_1)
+
+    @mock.patch('photoeditor.convert_board.RightCanvas.get_skew_angle')
+    @mock.patch('photoeditor.convert_board.RightCanvas.display_image_size')
+    @mock.patch('photoeditor.convert_board.RightCanvas.create_image_cv')
+    @mock.patch('photoeditor.convert_board.messagebox.showerror')
+    def test_x_is_selected(self, mock_msgbox, mock_create_image_cv,
+                           mock_display_image_size, mock_get_angle):
+        xy_bool = mock.MagicMock()
+        xy_bool.get.return_value = True
+        mock_xy = xy_bool
+        mock_get_angle.return_value = 45
+        angle = math.tan(math.radians(45))
+        mat = np.array([[1, angle, 0], [0, 1, 0]], dtype=np.float32)
+        img = cv2.warpAffine(
+            self.test_img, mat, (int(self.width + self.height * angle), self.height))
+        img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        with mock.patch.object(self.editor.right_canvas, 'img_path', self.test_path):
+            with mock.patch.object(self.editor.right_canvas, 'source_img', self.test_img):
+                with mock.patch.object(self.editor.right_canvas, 'xy_bool', mock_xy):
+                    self.editor.right_canvas.show_skewed_image()
+        self.assertTrue(
+            (mock_create_image_cv.call_args_list[0][0] == img_rgb).all())
+        mock_display_image_size.assert_called_once_with(*img.shape[:-1][::-1])
+        mock_msgbox.assert_not_called()
+
+    @mock.patch('photoeditor.convert_board.RightCanvas.get_skew_angle')
+    @mock.patch('photoeditor.convert_board.RightCanvas.display_image_size')
+    @mock.patch('photoeditor.convert_board.RightCanvas.create_image_cv')
+    @mock.patch('photoeditor.convert_board.messagebox.showerror')
+    def test_y_is_selected(self, mock_msgbox, mock_create_image_cv,
+                           mock_display_image_size, mock_get_angle):
+        xy_bool = mock.MagicMock()
+        xy_bool.get.return_value = False
+        mock_xy = xy_bool
+        mock_get_angle.return_value = 45
+        angle = math.tan(math.radians(45))
+        mat = np.array([[1, 0, 0], [angle, 1, 0]], dtype=np.float32)
+        img = cv2.warpAffine(
+            self.test_img, mat, (self.width, int(self.height + self.width * angle)))
+        img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        with mock.patch.object(self.editor.right_canvas, 'img_path', self.test_path):
+            with mock.patch.object(self.editor.right_canvas, 'source_img', self.test_img):
+                with mock.patch.object(self.editor.right_canvas, 'xy_bool', mock_xy):
+                    self.editor.right_canvas.show_skewed_image()
+        self.assertTrue(
+            (mock_create_image_cv.call_args_list[0][0] == img_rgb).all())
+        mock_display_image_size.assert_called_once_with(*img.shape[:-1][::-1])
+        mock_msgbox.assert_not_called()
+
+
+class SaveTestCase(ConvertBoardTestCase):
+    """Test for save_open_cv
+    """
+
+    @mock.patch('photoeditor.base_board.messagebox.showerror')
+    def test_image_path_is_None(self, mock_msgbox):
+        """Check that a converted image is not saved
+           when Save button is clicked and img_path is None.
+        """
+        self.editor.right_canvas.save_open_cv()
+        mock_msgbox.assert_called_once()
+        # error message
+        call_args = mock_msgbox.call_args_list[0]
+        self.assertEqual(call_args[0][0], ERROR)
+        self.assertEqual(str(call_args[0][1]), RIGHT_CANVAS_MSG_1)
+
+
 
 
 if __name__ == '__main__':
