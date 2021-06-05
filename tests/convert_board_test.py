@@ -6,37 +6,16 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '../photoeditor'))
 import math
 import tkinter as tk
 from pathlib import Path
-from unittest import TestCase, mock, main
+from unittest import mock, main
 
 import cv2
 import numpy as np
-from TkinterDnD2 import *
 
-from photoeditor.convert_board import EditorBoard, ERROR, RIGHT_CANVAS_MSG_1
-
-
-class ConvertBoardTestCase(TestCase):
-
-    def setUp(self):
-        self.test_path = 'test.jpg'
-        self.test_img = cv2.imread(self.test_path)
-        self.height, self.width, _ = self.test_img.shape
-        self.app = TkinterDnD.Tk()
-        self.app.withdraw()
-        self.editor = EditorBoard(self.app)
-        self.pump_events()
-
-    def tearDown(self):
-        if self.app:
-            self.app.destroy()
-            self.pump_events()
-
-    def pump_events(self):
-        while self.app.dooneevent(tk._tkinter.ALL_EVENTS | tk._tkinter.DONT_WAIT):
-            pass
+from common_set_up import CommonSetUp
+from photoeditor.config import SAVE_MSG_1, SAVE_MSG_2, INFO, ERROR, RIGHT_CANVAS_MSG_1
 
 
-class ShowGrayImageTestCase(ConvertBoardTestCase):
+class ShowGrayImageTestCase(CommonSetUp):
     """Test for show_gray_image
     """
 
@@ -73,7 +52,7 @@ class ShowGrayImageTestCase(ConvertBoardTestCase):
         mock_msgbox.assert_not_called()
 
 
-class ShowImageLikeAnimationTestCase(ConvertBoardTestCase):
+class ShowImageLikeAnimationTestCase(CommonSetUp):
     """Test for show_image_like_animation
     """
 
@@ -108,7 +87,7 @@ class ShowImageLikeAnimationTestCase(ConvertBoardTestCase):
         mock_msgbox.assert_not_called()
 
 
-class ShowSepiaImageTestCase(ConvertBoardTestCase):
+class ShowSepiaImageTestCase(CommonSetUp):
     """Test for show_sepia_image
     """
 
@@ -228,7 +207,7 @@ class ShowSepiaImageTestCase(ConvertBoardTestCase):
         mock_display_image_size.assert_called_once_with(self.width, self.height)
 
 
-class ShowPixelArtTestCase(ConvertBoardTestCase):
+class ShowPixelArtTestCase(CommonSetUp):
     """Test for show_pixel_art
     """
     @mock.patch('photoeditor.convert_board.RightCanvas.display_image_size')
@@ -262,7 +241,7 @@ class ShowPixelArtTestCase(ConvertBoardTestCase):
         mock_msgbox.assert_not_called()
 
 
-class ShowGeometricImageTestCase(ConvertBoardTestCase):
+class ShowGeometricImageTestCase(CommonSetUp):
     """Test for show_geometric_image
     """
 
@@ -312,7 +291,7 @@ class ShowGeometricImageTestCase(ConvertBoardTestCase):
            when Geometric button is clicked and angle entry is empty.
         """
         mock_int_var = mock.MagicMock()
-        msg = 'expected intger-point number but got "0,2"'
+        msg = 'expected intger-point number but got ""'
         mock_int_var.get.side_effect = tk._tkinter.TclError(msg)
         mock_angle = mock_int_var
         with mock.patch.object(self.editor.right_canvas, 'img_path', self.test_path):
@@ -371,7 +350,7 @@ class ShowGeometricImageTestCase(ConvertBoardTestCase):
         mock_msgbox.assert_not_called()
 
 
-class ShowSkewesImageTestCase(ConvertBoardTestCase):
+class ShowSkewesImageTestCase(CommonSetUp):
     """Test for show_skews_image
     """
 
@@ -440,23 +419,194 @@ class ShowSkewesImageTestCase(ConvertBoardTestCase):
         mock_msgbox.assert_not_called()
 
 
-class SaveTestCase(ConvertBoardTestCase):
+class SaveTestCase(CommonSetUp):
     """Test for save_open_cv
     """
 
+    @mock.patch('photoeditor.base_board.filedialog.asksaveasfilename')
     @mock.patch('photoeditor.base_board.messagebox.showerror')
-    def test_image_path_is_None(self, mock_msgbox):
+    def test_image_path_is_None(self, mock_msgbox, mock_filedialog):
         """Check that a converted image is not saved
            when Save button is clicked and img_path is None.
         """
         self.editor.right_canvas.save_open_cv()
         mock_msgbox.assert_called_once()
+        mock_filedialog.assert_not_called()
         # error message
         call_args = mock_msgbox.call_args_list[0]
         self.assertEqual(call_args[0][0], ERROR)
         self.assertEqual(str(call_args[0][1]), RIGHT_CANVAS_MSG_1)
 
+    @mock.patch('photoeditor.base_board.filedialog.asksaveasfilename')
+    @mock.patch('photoeditor.base_board.messagebox.showerror')
+    def test_width_entry_is_empty(self, mock_msgbox, mock_filedialog):
+        """Check that a converted image is not saved
+           when Save button is clicked and width entry is empty.
+        """
+        height_var = mock.MagicMock()
+        height_var.get.return_value = self.height
+        mock_height_var = height_var
+        width_var = mock.MagicMock()
+        width_var.get.return_value = ''
+        mock_width_var = width_var
+        with mock.patch.object(self.editor.right_canvas, 'current_img', self.test_img):
+            with mock.patch.object(self.editor.right_canvas, 'width_var', mock_width_var):
+                with mock.patch.object(self.editor.right_canvas, 'height_var', mock_height_var):
+                    self.editor.right_canvas.save_open_cv()
+        mock_msgbox.assert_called_once()
+        mock_filedialog.assert_not_called()
+        # error message
+        call_args = mock_msgbox.call_args_list[0]
+        self.assertEqual(call_args[0][0], ERROR)
+        self.assertEqual(str(call_args[0][1]), SAVE_MSG_1)
 
+    @mock.patch('photoeditor.base_board.filedialog.asksaveasfilename')
+    @mock.patch('photoeditor.base_board.messagebox.showerror')
+    def test_width_entry_is_0(self, mock_msgbox, mock_filedialog):
+        """Check that a converted image is not saved
+           when Save button is clicked and width entry is 0.
+        """
+        height_var = mock.MagicMock()
+        height_var.get.return_value = self.height
+        mock_height_var = height_var
+        width_var = mock.MagicMock()
+        width_var.get.return_value = 0
+        mock_width_var = width_var
+        with mock.patch.object(self.editor.right_canvas, 'current_img', self.test_img):
+            with mock.patch.object(self.editor.right_canvas, 'width_var', mock_width_var):
+                with mock.patch.object(self.editor.right_canvas, 'height_var', mock_height_var):
+                    self.editor.right_canvas.save_open_cv()
+        mock_msgbox.assert_called_once()
+        mock_filedialog.assert_not_called()
+        # error message
+        call_args = mock_msgbox.call_args_list[0]
+        self.assertEqual(call_args[0][0], ERROR)
+        self.assertEqual(str(call_args[0][1]), SAVE_MSG_1)
+
+    @mock.patch('photoeditor.base_board.filedialog.asksaveasfilename')
+    @mock.patch('photoeditor.base_board.messagebox.showerror')
+    def test_height_entry_is_empty(self, mock_msgbox, mock_filedialog):
+        """Check that a converted image is not saved
+           when Save button is clicked and height_entry is empty.
+        """
+        height_var = mock.MagicMock()
+        height_var.get.return_value = ''
+        mock_height_var = height_var
+        width_var = mock.MagicMock()
+        width_var.get.return_value = self.width
+        mock_width_var = width_var
+        with mock.patch.object(self.editor.right_canvas, 'current_img', self.test_img):
+            with mock.patch.object(self.editor.right_canvas, 'width_var', mock_width_var):
+                with mock.patch.object(self.editor.right_canvas, 'height_var', mock_height_var):
+                    self.editor.right_canvas.save_open_cv()
+        mock_msgbox.assert_called_once()
+        mock_filedialog.assert_not_called()
+        # error message
+        call_args = mock_msgbox.call_args_list[0]
+        self.assertEqual(call_args[0][0], ERROR)
+        self.assertEqual(str(call_args[0][1]), SAVE_MSG_1)
+
+    @mock.patch('photoeditor.base_board.filedialog.asksaveasfilename')
+    @mock.patch('photoeditor.base_board.messagebox.showerror')
+    def test_height_entry_is_0(self, mock_msgbox, mock_filedialog):
+        """Check that a converted image is not saved
+           when Save button is clicked and height_entry is 0.
+        """
+        height_var = mock.MagicMock()
+        height_var.get.return_value = 0
+        mock_height_var = height_var
+        width_var = mock.MagicMock()
+        width_var.get.return_value = self.width
+        mock_width_var = width_var
+        with mock.patch.object(self.editor.right_canvas, 'current_img', self.test_img):
+            with mock.patch.object(self.editor.right_canvas, 'width_var', mock_width_var):
+                with mock.patch.object(self.editor.right_canvas, 'height_var', mock_height_var):
+                    self.editor.right_canvas.save_open_cv()
+        mock_msgbox.assert_called_once()
+        mock_filedialog.assert_not_called()
+        # error message
+        call_args = mock_msgbox.call_args_list[0]
+        self.assertEqual(call_args[0][0], ERROR)
+        self.assertEqual(str(call_args[0][1]), SAVE_MSG_1)
+
+    @mock.patch('photoeditor.base_board.messagebox.showinfo')
+    @mock.patch('photoeditor.base_board.cv2.imwrite')
+    @mock.patch('photoeditor.base_board.filedialog.asksaveasfilename')
+    @mock.patch('photoeditor.base_board.messagebox.showerror')
+    def test_save_path_is_not_selected(self, mock_err_msgbox, mock_filedialog,
+                                       mock_imwrite, mock_info_msgbox):
+        """Check that a converted image is not saved
+           when Save button is clicked and dir is not selected.
+        """
+        width_var = mock.MagicMock()
+        width_var.get.return_value = self.width
+        mock_width_var = width_var
+        height_var = mock.MagicMock()
+        height_var.get.return_value = self.height
+        mock_height_var = height_var
+        mock_filedialog.return_value = ''
+        with mock.patch.object(self.editor.right_canvas, 'current_img', self.test_img):
+            with mock.patch.object(self.editor.right_canvas, 'width_var', mock_width_var):
+                with mock.patch.object(self.editor.right_canvas, 'height_var', mock_height_var):
+                    self.editor.right_canvas.save_open_cv()
+        mock_err_msgbox.assert_not_called()
+        mock_filedialog.assert_called_once()
+        mock_imwrite.assert_not_called()
+        mock_info_msgbox.assert_not_called()
+
+    @mock.patch('photoeditor.base_board.messagebox.showinfo')
+    @mock.patch('photoeditor.base_board.cv2.resize')
+    @mock.patch('photoeditor.base_board.cv2.imwrite')
+    @mock.patch('photoeditor.base_board.filedialog.asksaveasfilename')
+    @mock.patch('photoeditor.base_board.messagebox.showerror')
+    def test_save_path_is_selected(self, mock_err_msgbox, mock_filedialog,
+                                   mock_imwrite, mock_resize, mock_info_msgbox):
+        """Check that a converted image is saved
+           when Save button is clicked and the image is not risezed.
+        """
+        width_var = mock.MagicMock()
+        width_var.get.return_value = self.width
+        mock_width_var = width_var
+        height_var = mock.MagicMock()
+        height_var.get.return_value = self.height
+        mock_height_var = height_var
+        mock_filedialog.return_value = 'tests'
+        with mock.patch.object(self.editor.right_canvas, 'current_img', self.test_img):
+            with mock.patch.object(self.editor.right_canvas, 'width_var', mock_width_var):
+                with mock.patch.object(self.editor.right_canvas, 'height_var', mock_height_var):
+                    self.editor.right_canvas.save_open_cv()
+        mock_err_msgbox.assert_not_called()
+        mock_filedialog.assert_called_once()
+        mock_resize.assert_not_called()
+        mock_imwrite.assert_called_once()
+        mock_info_msgbox.assert_called_once_with(INFO, SAVE_MSG_2)
+
+    @mock.patch('photoeditor.base_board.messagebox.showinfo')
+    @mock.patch('photoeditor.base_board.cv2.resize')
+    @mock.patch('photoeditor.base_board.cv2.imwrite')
+    @mock.patch('photoeditor.base_board.filedialog.asksaveasfilename')
+    @mock.patch('photoeditor.base_board.messagebox.showerror')
+    def test_save_path_is_selected_and_resize(self, mock_err_msgbox, mock_filedialog,
+                                              mock_imwrite, mock_resize, mock_info_msgbox):
+        """Check that a converted image is saved
+           when Save button is clicked and the image is not risezed.
+        """
+        width_var = mock.MagicMock()
+        width_var.get.return_value = self.width * 2
+        mock_width_var = width_var
+        height_var = mock.MagicMock()
+        height_var.get.return_value = self.height * 2
+        mock_height_var = height_var
+        mock_filedialog.return_value = 'tests'
+        with mock.patch.object(self.editor.right_canvas, 'current_img', self.test_img):
+            with mock.patch.object(self.editor.right_canvas, 'width_var', mock_width_var):
+                with mock.patch.object(self.editor.right_canvas, 'height_var', mock_height_var):
+                    self.editor.right_canvas.save_open_cv()
+        mock_err_msgbox.assert_not_called()
+        mock_filedialog.assert_called_once()
+        mock_resize.assert_called_once()
+        mock_imwrite.assert_called_once()
+        mock_info_msgbox.assert_called_once_with(INFO, SAVE_MSG_2)
 
 
 if __name__ == '__main__':
