@@ -611,7 +611,7 @@ class SaveTestCase(ConvertBoardTestCase):
     def test_save_path_is_selected_and_resize(self, mock_err_msgbox, mock_filedialog,
                                               mock_imwrite, mock_resize, mock_info_msgbox):
         """Check that a converted image is saved
-           when Save button is clicked and the image is not risezed.
+           when Save button is clicked and the image is risezed.
         """
         width_var = mock.MagicMock()
         width_var.get.return_value = self.width * 2
