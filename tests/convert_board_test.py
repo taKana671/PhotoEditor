@@ -6,16 +6,38 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '../photoeditor'))
 import math
 import tkinter as tk
 from pathlib import Path
-from unittest import mock, main
+from unittest import TestCase, mock, main
 
 import cv2
 import numpy as np
+from TkinterDnD2 import *
 
-from common_set_up import CommonSetUp
 from photoeditor.config import SAVE_MSG_1, SAVE_MSG_2, INFO, ERROR, RIGHT_CANVAS_MSG_1
+from photoeditor.convert_board import EditorBoard
 
 
-class ShowGrayImageTestCase(CommonSetUp):
+class ConvertBoardTestCase(TestCase):
+
+    def setUp(self):
+        self.test_path = 'test.jpg'
+        self.test_img = cv2.imread(self.test_path)
+        self.height, self.width, _ = self.test_img.shape
+        self.app = TkinterDnD.Tk()
+        self.app.withdraw()
+        self.editor = EditorBoard(self.app)
+        self.pump_events()
+
+    def tearDown(self):
+        if self.app:
+            self.app.destroy()
+            self.pump_events()
+
+    def pump_events(self):
+        while self.app.dooneevent(tk._tkinter.ALL_EVENTS | tk._tkinter.DONT_WAIT):
+            pass
+
+
+class ShowGrayImageTestCase(ConvertBoardTestCase):
     """Test for show_gray_image
     """
 
@@ -52,7 +74,7 @@ class ShowGrayImageTestCase(CommonSetUp):
         mock_msgbox.assert_not_called()
 
 
-class ShowImageLikeAnimationTestCase(CommonSetUp):
+class ShowImageLikeAnimationTestCase(ConvertBoardTestCase):
     """Test for show_image_like_animation
     """
 
@@ -87,7 +109,7 @@ class ShowImageLikeAnimationTestCase(CommonSetUp):
         mock_msgbox.assert_not_called()
 
 
-class ShowSepiaImageTestCase(CommonSetUp):
+class ShowSepiaImageTestCase(ConvertBoardTestCase):
     """Test for show_sepia_image
     """
 
@@ -207,7 +229,7 @@ class ShowSepiaImageTestCase(CommonSetUp):
         mock_display_image_size.assert_called_once_with(self.width, self.height)
 
 
-class ShowPixelArtTestCase(CommonSetUp):
+class ShowPixelArtTestCase(ConvertBoardTestCase):
     """Test for show_pixel_art
     """
     @mock.patch('photoeditor.convert_board.RightCanvas.display_image_size')
@@ -241,7 +263,7 @@ class ShowPixelArtTestCase(CommonSetUp):
         mock_msgbox.assert_not_called()
 
 
-class ShowGeometricImageTestCase(CommonSetUp):
+class ShowGeometricImageTestCase(ConvertBoardTestCase):
     """Test for show_geometric_image
     """
 
@@ -350,7 +372,7 @@ class ShowGeometricImageTestCase(CommonSetUp):
         mock_msgbox.assert_not_called()
 
 
-class ShowSkewesImageTestCase(CommonSetUp):
+class ShowSkewesImageTestCase(ConvertBoardTestCase):
     """Test for show_skews_image
     """
 
@@ -419,7 +441,7 @@ class ShowSkewesImageTestCase(CommonSetUp):
         mock_msgbox.assert_not_called()
 
 
-class SaveTestCase(CommonSetUp):
+class SaveTestCase(ConvertBoardTestCase):
     """Test for save_open_cv
     """
 
