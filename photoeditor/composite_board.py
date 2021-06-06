@@ -136,7 +136,7 @@ class LeftCanvas(CompositeBoard):
 
     def get_3d_gradient(self, start_tuple, stop_tuple, is_horizontal_tuple,
                         width=BOARD_W, height=BOARD_H):
-        array = np.zeros((height, width, len(start_tuple)), dtype=np.float)
+        array = np.zeros((height, width, len(start_tuple)), dtype=np.float64)
         for i, (start, stop, is_horizontal) in enumerate(
                 zip(start_tuple, stop_tuple, is_horizontal_tuple)):
             array[:, :, i] = self.get_2d_gradient(start, stop, width, height, is_horizontal)
