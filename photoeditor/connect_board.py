@@ -191,7 +191,7 @@ class RightCanvas(ConnectBoard):
                     if self.current_img is None:
                         raise NoImageOnTheCanvasError(RIGHT_CANVAS_MSG_1)
                     if pattern == 'repeat':
-                        if not self.col_var.get() or not self.row_var:
+                        if not self.col_var.get() or not self.row_var.get():
                             raise InvalidSizeError(RIGHT_CANVAS_MSG_3)
                     if pattern == 'concat':
                         if len(self.concat_imgs) < 2:
