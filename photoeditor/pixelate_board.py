@@ -6,15 +6,15 @@ from pathlib import Path
 from tkinter import messagebox
 
 import cv2
-from PIL import Image, ImageTk
-from scipy.interpolate import splrep, splev
+from PIL import Image
+# from scipy.interpolate import splrep, splev
 from TkinterDnD2 import *
 
 from base_board import (BaseBoard, NoImageOnTheCanvasError, NotSelectedAreaError,
     InvalidSizeError)
 from board_window import BoardWindow
-from config import (PADY, PADX, FACE_CASCADE_PATH, EYE_CASCADE_PATH, ERROR, RIGHT_CANVAS_MSG_1,
-    RIGHT_CANVAS_MSG_2, IMAGE_SIZE_MSG_1)
+from config import (PADY, PADX, FACE_CASCADE_PATH, EYE_CASCADE_PATH, ERROR,
+    RIGHT_CANVAS_MSG_1, RIGHT_CANVAS_MSG_2, IMAGE_SIZE_MSG_1)
 
 
 Corner = namedtuple('Corner', 'x y')
@@ -196,7 +196,7 @@ class RightCanvas(PixelateBoard):
                     if pattern == 'compare':
                         left_img = args[0]
                         if left_img.shape != self.source_img.shape:
-                            raise InvalidSizeError()(IMAGE_SIZE_MSG_1)
+                            raise InvalidSizeError(IMAGE_SIZE_MSG_1)
                     func(self, *args, **kwargs)
                 except Exception as e:
                     messagebox.showerror(ERROR, e)
