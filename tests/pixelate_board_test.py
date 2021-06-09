@@ -408,5 +408,44 @@ class DetectEyeTestCase(PixelateBoardTestCase):
         mock_msgbox.assert_not_called()
 
 
+class CompareImagesTestCase(PixelateBoardTestCase):
+    """Test for compare_images
+    """
+
+    @mock.patch('photoeditor.pixelate_board.RightCanvas.create_image_cv')
+    @mock.patch('photoeditor.convert_board.messagebox.showerror')
+    def test_no_img_path(self, mock_msgbox, mock_create_image_cv):
+        """Check that the comparison of image fails
+           when Compare button is clicked because img_path is None.
+        """
+        self.editor.right_canvas.compare_images()
+        mock_create_image_cv.assert_not_called()
+        # error message
+        call_args = mock_msgbox.call_args_list[0]
+        self.assertEqual(call_args[0][0], ERROR)
+        self.assertEqual(str(call_args[0][1]), RIGHT_CANVAS_MSG_1)
+
+    @mock.patch('photoeditor.pixelate_board.RightCanvas.create_image_cv')
+    @mock.patch('photoeditor.convert_board.messagebox.showerror')
+    def test_sizes_not_same(self, mock_msgbox, mock_create_image_cv):
+        """Check that the comparison of image fails when Compare button
+           is clicked because the images don't have the same size.
+        """
+        mock = mock.MagicMock(shape=(1000, 1000, 3))
+
+        with mock.patch.object(self.editor.right_canvas, 'img_path', self.test_path):
+            with mock.patch.object(self.editor.left_canvas, 'source_img', self.test_img):
+                with mock.patch.object(self.editor.right_canvas, 'source_img', self.test_img):
+        self.editor.right_canvas.compare_images()
+        mock_create_image_cv.assert_not_called()
+        # error message
+        call_args = mock_msgbox.call_args_list[0]
+        self.assertEqual(call_args[0][0], ERROR)
+        self.assertEqual(str(call_args[0][1]), RIGHT_CANVAS_MSG_1)
+
+
+
+
+
 if __name__ == '__main__':
     main()
