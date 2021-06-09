@@ -5,7 +5,6 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '../photoeditor'))
 
 import math
 import tkinter as tk
-from pathlib import Path
 from unittest import TestCase, mock, main
 
 import cv2
@@ -46,7 +45,7 @@ class ShowGrayImageTestCase(ConvertBoardTestCase):
     @mock.patch('photoeditor.convert_board.messagebox.showerror')
     def test_image_path_is_None(self, mock_msgbox, mock_create_image_cv, mock_display_image_size):
         """Check that the display of a converted image fails
-           when Gray button is clicked and img_path is None.
+           when Gray button is clicked because img_path is None.
         """
         self.editor.right_canvas.show_gray_image()
         mock_create_image_cv.assert_not_called()
@@ -62,7 +61,7 @@ class ShowGrayImageTestCase(ConvertBoardTestCase):
     @mock.patch('photoeditor.convert_board.messagebox.showerror')
     def test_image_path_is_not_none(self, mock_msgbox, mock_create_image_cv, mock_display_image_size):
         """Check that gray image is displayed successfully
-           when Gray button is clicked and img_path is not None.
+           when Gray button is clicked.
         """
         with mock.patch.object(self.editor.right_canvas, 'img_path', self.test_path):
             with mock.patch.object(self.editor.right_canvas, 'source_img', self.test_img):
@@ -83,7 +82,7 @@ class ShowImageLikeAnimationTestCase(ConvertBoardTestCase):
     @mock.patch('photoeditor.convert_board.messagebox.showerror')
     def test_image_path_is_None(self, mock_msgbox, mock_create_image_cv, mock_display_image_size):
         """Check that the display of a converted image fails
-           when Anime button is clicked and img_path is None.
+           when Anime button is clicked because img_path is None.
         """
         self.editor.right_canvas.show_image_like_animation()
         mock_create_image_cv.assert_not_called()
@@ -99,7 +98,7 @@ class ShowImageLikeAnimationTestCase(ConvertBoardTestCase):
     @mock.patch('photoeditor.convert_board.messagebox.showerror')
     def test_image_path_is_not_none(self, mock_msgbox, mock_create_image_cv, mock_display_image_size):
         """Check that the converted image is displayed successfully
-           when Anime button is clicked and img_path is not None.
+           when Anime button is clicked.
         """
         with mock.patch.object(self.editor.right_canvas, 'img_path', self.test_path):
             with mock.patch.object(self.editor.right_canvas, 'source_img', self.test_img):
@@ -118,7 +117,7 @@ class ShowSepiaImageTestCase(ConvertBoardTestCase):
     @mock.patch('photoeditor.convert_board.messagebox.showerror')
     def test_image_path_is_None(self, mock_msgbox, mock_create_image_cv, mock_display_image_size):
         """Check that the display of a converted image fails
-           when Sepia button is clicked and img_path is None.
+           when Sepia button is clicked because img_path is None.
         """
         self.editor.right_canvas.show_sepia_image()
         mock_create_image_cv.assert_not_called()
@@ -237,7 +236,7 @@ class ShowPixelArtTestCase(ConvertBoardTestCase):
     @mock.patch('photoeditor.convert_board.messagebox.showerror')
     def test_image_path_is_None(self, mock_msgbox, mock_create_image_cv, mock_display_image_size):
         """Check that the display of a converted image fails
-           when Pixel button is clicked and img_path is None.
+           when Pixel button is clicked because img_path is None.
         """
         self.editor.right_canvas.show_pixel_art()
         mock_create_image_cv.assert_not_called()
@@ -253,7 +252,7 @@ class ShowPixelArtTestCase(ConvertBoardTestCase):
     @mock.patch('photoeditor.convert_board.messagebox.showerror')
     def test_image_path_is_not_none(self, mock_msgbox, mock_create_image_cv, mock_display_image_size):
         """Check that the converted image is displayed
-           when Pixel button is clicked and img_path is not None.
+           when Pixel button is clicked.
         """
         with mock.patch.object(self.editor.right_canvas, 'img_path', self.test_path):
             with mock.patch.object(self.editor.right_canvas, 'source_img', self.test_img):
@@ -272,7 +271,7 @@ class ShowGeometricImageTestCase(ConvertBoardTestCase):
     @mock.patch('photoeditor.convert_board.messagebox.showerror')
     def test_image_path_is_None(self, mock_msgbox, mock_create_image_cv, mock_display_image_size):
         """Check that the display of a converted image fails
-           when Geometric button is clicked and img_path is None.
+           when Geometric button is clicked because img_path is None.
         """
         self.editor.right_canvas.show_geometric_image()
         mock_create_image_cv.assert_not_called()
@@ -288,7 +287,7 @@ class ShowGeometricImageTestCase(ConvertBoardTestCase):
     @mock.patch('photoeditor.convert_board.messagebox.showerror')
     def test_scale_entry_is_empty(self, mock_msgbox, mock_create_image_cv, mock_display_image_size):
         """Check that the display of a converted image fails
-           when Geometric button is clicked and scale entry is empty.
+           when Geometric button is clicked because scale entry is empty.
         """
         mock_double_var = mock.MagicMock()
         msg = 'expected floating-point number but got ""'
@@ -310,7 +309,7 @@ class ShowGeometricImageTestCase(ConvertBoardTestCase):
     @mock.patch('photoeditor.convert_board.messagebox.showerror')
     def test_angle_engry_is_empty(self, mock_msgbox, mock_create_image_cv, mock_display_image_size):
         """Check that the display of a converted image fails
-           when Geometric button is clicked and angle entry is empty.
+           when Geometric button is clicked because angle entry is empty.
         """
         mock_int_var = mock.MagicMock()
         msg = 'expected intger-point number but got ""'
@@ -334,7 +333,7 @@ class ShowGeometricImageTestCase(ConvertBoardTestCase):
     def test_args_containing_dst(self, mock_msgbox, mock_create_image_cv,
                                  mock_display_image_size, get_mode):
         """Check that the display of a converted image fails
-           when Geometric button is clicked and args contains dst.
+           when args contains dst and Geometric button is clicked.
         """
         mat = cv2.getRotationMatrix2D((self.width / 2, self.height / 2), 45, 0.5)
         img = cv2.warpAffine(
@@ -381,7 +380,7 @@ class ShowSkewesImageTestCase(ConvertBoardTestCase):
     @mock.patch('photoeditor.convert_board.messagebox.showerror')
     def test_image_path_is_None(self, mock_msgbox, mock_create_image_cv, mock_display_image_size):
         """Check that the display of a converted image fails
-           when Geometric button is clicked and img_path is None.
+           when Skew button is clicked because img_path is None.
         """
         self.editor.right_canvas.show_skewed_image()
         mock_create_image_cv.assert_not_called()
@@ -398,6 +397,9 @@ class ShowSkewesImageTestCase(ConvertBoardTestCase):
     @mock.patch('photoeditor.convert_board.messagebox.showerror')
     def test_x_is_selected(self, mock_msgbox, mock_create_image_cv,
                            mock_display_image_size, mock_get_angle):
+        """Check that a converted image is displayed
+           when Skew button is clicked with x selected.
+        """
         xy_bool = mock.MagicMock()
         xy_bool.get.return_value = True
         mock_xy = xy_bool
@@ -422,6 +424,9 @@ class ShowSkewesImageTestCase(ConvertBoardTestCase):
     @mock.patch('photoeditor.convert_board.messagebox.showerror')
     def test_y_is_selected(self, mock_msgbox, mock_create_image_cv,
                            mock_display_image_size, mock_get_angle):
+        """Check that a converted image is displayed
+           when Skew button is clicked with y selected.
+        """
         xy_bool = mock.MagicMock()
         xy_bool.get.return_value = False
         mock_xy = xy_bool
@@ -449,7 +454,7 @@ class SaveTestCase(ConvertBoardTestCase):
     @mock.patch('photoeditor.base_board.messagebox.showerror')
     def test_image_path_is_None(self, mock_msgbox, mock_filedialog):
         """Check that a converted image is not saved
-           when Save button is clicked and img_path is None.
+           when Save button is clicked because img_path is None.
         """
         self.editor.right_canvas.save_open_cv()
         mock_msgbox.assert_called_once()
@@ -463,7 +468,7 @@ class SaveTestCase(ConvertBoardTestCase):
     @mock.patch('photoeditor.base_board.messagebox.showerror')
     def test_width_entry_is_empty(self, mock_msgbox, mock_filedialog):
         """Check that a converted image is not saved
-           when Save button is clicked and width entry is empty.
+           when Save button is clicked because width entry is empty.
         """
         height_var = mock.MagicMock()
         height_var.get.return_value = self.height
@@ -486,7 +491,7 @@ class SaveTestCase(ConvertBoardTestCase):
     @mock.patch('photoeditor.base_board.messagebox.showerror')
     def test_width_entry_is_0(self, mock_msgbox, mock_filedialog):
         """Check that a converted image is not saved
-           when Save button is clicked and width entry is 0.
+           when Save button is clicked because width is 0.
         """
         height_var = mock.MagicMock()
         height_var.get.return_value = self.height
@@ -509,7 +514,7 @@ class SaveTestCase(ConvertBoardTestCase):
     @mock.patch('photoeditor.base_board.messagebox.showerror')
     def test_height_entry_is_empty(self, mock_msgbox, mock_filedialog):
         """Check that a converted image is not saved
-           when Save button is clicked and height_entry is empty.
+           when Save button is clicked because height entry is empty.
         """
         height_var = mock.MagicMock()
         height_var.get.return_value = ''
@@ -532,7 +537,7 @@ class SaveTestCase(ConvertBoardTestCase):
     @mock.patch('photoeditor.base_board.messagebox.showerror')
     def test_height_entry_is_0(self, mock_msgbox, mock_filedialog):
         """Check that a converted image is not saved
-           when Save button is clicked and height_entry is 0.
+           when Save button is clicked because height is 0.
         """
         height_var = mock.MagicMock()
         height_var.get.return_value = 0
@@ -558,7 +563,7 @@ class SaveTestCase(ConvertBoardTestCase):
     def test_save_path_is_not_selected(self, mock_err_msgbox, mock_filedialog,
                                        mock_imwrite, mock_info_msgbox):
         """Check that a converted image is not saved
-           when Save button is clicked and dir is not selected.
+           when Save button is clicked because dir is not selected.
         """
         width_var = mock.MagicMock()
         width_var.get.return_value = self.width
@@ -583,8 +588,8 @@ class SaveTestCase(ConvertBoardTestCase):
     @mock.patch('photoeditor.base_board.messagebox.showerror')
     def test_save_path_is_selected(self, mock_err_msgbox, mock_filedialog,
                                    mock_imwrite, mock_resize, mock_info_msgbox):
-        """Check that a converted image is saved
-           when Save button is clicked and the image is not risezed.
+        """Check that a converted image is saved without resizing
+           when Save button is clicked.
         """
         width_var = mock.MagicMock()
         width_var.get.return_value = self.width
@@ -610,8 +615,8 @@ class SaveTestCase(ConvertBoardTestCase):
     @mock.patch('photoeditor.base_board.messagebox.showerror')
     def test_save_path_is_selected_and_resize(self, mock_err_msgbox, mock_filedialog,
                                               mock_imwrite, mock_resize, mock_info_msgbox):
-        """Check that a converted image is saved
-           when Save button is clicked and the image is risezed.
+        """Check that a converted image is resized and saved
+           when Save button is clicked.
         """
         width_var = mock.MagicMock()
         width_var.get.return_value = self.width * 2

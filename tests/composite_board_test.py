@@ -4,11 +4,9 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '../photoeditor'))
 
 import tkinter as tk
-from pathlib import Path
 from unittest import TestCase, mock, main
 
-import numpy as np
-from PIL import Image, ImageDraw, ImageFilter
+from PIL import Image
 from TkinterDnD2 import *
 
 from photoeditor.config import (SAVE_MSG_1, SAVE_MSG_2, INFO, ERROR, RIGHT_CANVAS_MSG_1,
@@ -47,7 +45,7 @@ class SaveTestCase(CompositeBoardTestCase):
     @mock.patch('photoeditor.base_board.messagebox.showerror')
     def test_image_path_is_None(self, mock_msgbox, mock_filedialog):
         """Check that a converted image is not saved
-           when Save button is clicked and img_path is None.
+           when Save button is clicked because img_path is None.
         """
 
         self.editor.right_canvas.save_with_pil()
@@ -62,7 +60,7 @@ class SaveTestCase(CompositeBoardTestCase):
     @mock.patch('photoeditor.base_board.messagebox.showerror')
     def test_width_entry_is_empty(self, mock_msgbox, mock_filedialog):
         """Check that a converted image is not saved
-           when Save button is clicked and width entry is empty.
+           when Save button is clicked because width entry is empty.
         """
         height_var = mock.MagicMock()
         height_var.get.return_value = self.height
@@ -85,7 +83,7 @@ class SaveTestCase(CompositeBoardTestCase):
     @mock.patch('photoeditor.base_board.messagebox.showerror')
     def test_width_entry_is_0(self, mock_msgbox, mock_filedialog):
         """Check that a converted image is not saved
-           when Save button is clicked and width entry is 0.
+           when Save button is clicked because width is 0.
         """
         height_var = mock.MagicMock()
         height_var.get.return_value = self.height
@@ -108,7 +106,7 @@ class SaveTestCase(CompositeBoardTestCase):
     @mock.patch('photoeditor.base_board.messagebox.showerror')
     def test_height_entry_is_empty(self, mock_msgbox, mock_filedialog):
         """Check that a converted image is not saved
-           when Save button is clicked and height_entry is empty.
+           when Save button is clicked because height entry is empty.
         """
         height_var = mock.MagicMock()
         height_var.get.return_value = ''
@@ -131,7 +129,7 @@ class SaveTestCase(CompositeBoardTestCase):
     @mock.patch('photoeditor.base_board.messagebox.showerror')
     def test_height_entry_is_0(self, mock_msgbox, mock_filedialog):
         """Check that a converted image is not saved
-           when Save button is clicked and height_entry is 0.
+           when Save button is clicked because height is 0.
         """
         height_var = mock.MagicMock()
         height_var.get.return_value = 0
@@ -154,8 +152,8 @@ class SaveTestCase(CompositeBoardTestCase):
     @mock.patch('photoeditor.base_board.filedialog.asksaveasfilename')
     @mock.patch('photoeditor.base_board.messagebox.showerror')
     def test_save_path_is_selected(self, mock_err_msgbox, mock_filedialog, mock_info_msgbox):
-        """Check that a converted image is saved
-           when Save button is clicked and the image is not risezed.
+        """Check that a converted image is not resized and saved
+           when Save button is clicked.
         """
         width_var = mock.MagicMock()
         width_var.get.return_value = self.width
@@ -186,8 +184,8 @@ class SaveTestCase(CompositeBoardTestCase):
     @mock.patch('photoeditor.base_board.filedialog.asksaveasfilename')
     @mock.patch('photoeditor.base_board.messagebox.showerror')
     def test_save_path_is_selected_and_resized(self, mock_err_msgbox, mock_filedialog, mock_info_msgbox):
-        """Check that a converted image is saved
-           when Save button is clicked and the image risezed.
+        """Check that a converted image is resized and saved
+           when Save button is clicked.
         """
         width_var = mock.MagicMock()
         width_var.get.return_value = self.width * 2
@@ -254,7 +252,7 @@ class CreateNewMaskTestCase(CompositeBoardTestCase):
     @mock.patch('photoeditor.composite_board.messagebox.showerror')
     def test_img_path_is_None(self, mock_msgbox, mock_draw_shape):
         """Check that a mask image is not made on the left canvas
-           when Create button is clicked and img_path is None.
+           when Create button is clicked because img_path is None.
         """
         self.editor.left_canvas.create_new_mask()
         mock_msgbox.assert_called_once()
@@ -268,7 +266,7 @@ class CreateNewMaskTestCase(CompositeBoardTestCase):
     @mock.patch('photoeditor.composite_board.messagebox.showerror')
     def test_corners_is_empty(self, mock_msgbox, mock_draw_shape):
         """Check that a mask image is not made on the left canvas
-           when Create button is clicked and no shapes are drawn.
+           when Create button is clicked because no shapes are drawn.
         """
         with mock.patch.object(self.editor.left_canvas, 'img_path', self.test_path):
             with mock.patch.object(self.editor.left_canvas, 'corners', []):
@@ -284,7 +282,7 @@ class CreateNewMaskTestCase(CompositeBoardTestCase):
     @mock.patch('photoeditor.composite_board.messagebox.showerror')
     def test_shape3_and_corners_is_less_than_3(self, mock_msgbox, mock_draw_shape):
         """Check that a mask image is not made on the left canvas
-           when Create button is clicked and shape3 cannot be drawn.
+           when Create button is clicked because shape3 cannot be drawn.
         """
         mock_intvar = mock.MagicMock()
         mock_intvar.get.return_value = 3
@@ -347,7 +345,7 @@ class CropImageTestCase(CompositeBoardTestCase):
     @mock.patch('photoeditor.composite_board.messagebox.showerror')
     def test_img_path_is_None(self, mock_msgbox, mock_draw_shape):
         """Check that a cropped image is not made on the left canvas
-           when Crop button is clicked and img_path is None.
+           when Crop button is clicked because img_path is None.
         """
         self.editor.left_canvas.crop_image()
         mock_msgbox.assert_called_once()
@@ -377,7 +375,7 @@ class CropImageTestCase(CompositeBoardTestCase):
     @mock.patch('photoeditor.composite_board.messagebox.showerror')
     def test_shape3_and_corners_is_less_than_3(self, mock_msgbox, mock_draw_shape):
         """Check that a cropped image is not made on the left canvas
-           when Crop button is clicked and shape3 cannot be drawn.
+           when Crop button is clicked because shape3 cannot be drawn.
         """
         mock_intvar = mock.MagicMock()
         mock_intvar.get.return_value = 3

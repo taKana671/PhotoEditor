@@ -44,7 +44,7 @@ class SaveTestCase(ConnectBoardTestCase):
     @mock.patch('photoeditor.base_board.messagebox.showerror')
     def test_image_path_is_None(self, mock_msgbox, mock_filedialog):
         """Check that a converted image is not saved
-           when Save button is clicked and img_path is None.
+           when Save button is clicked because img_path is None.
         """
 
         self.editor.right_canvas.save_with_pil()
@@ -59,7 +59,7 @@ class SaveTestCase(ConnectBoardTestCase):
     @mock.patch('photoeditor.base_board.messagebox.showerror')
     def test_width_entry_is_empty(self, mock_msgbox, mock_filedialog):
         """Check that a converted image is not saved
-           when Save button is clicked and width entry is empty.
+           when Save button is clicked because width entry is empty.
         """
         height_var = mock.MagicMock()
         height_var.get.return_value = self.height
@@ -82,7 +82,7 @@ class SaveTestCase(ConnectBoardTestCase):
     @mock.patch('photoeditor.base_board.messagebox.showerror')
     def test_width_entry_is_0(self, mock_msgbox, mock_filedialog):
         """Check that a converted image is not saved
-           when Save button is clicked and width entry is 0.
+           when Save button is clicked because width is 0.
         """
         height_var = mock.MagicMock()
         height_var.get.return_value = self.height
@@ -105,7 +105,7 @@ class SaveTestCase(ConnectBoardTestCase):
     @mock.patch('photoeditor.base_board.messagebox.showerror')
     def test_height_entry_is_empty(self, mock_msgbox, mock_filedialog):
         """Check that a converted image is not saved
-           when Save button is clicked and height_entry is empty.
+           when Save button is clicked because height entry is empty.
         """
         height_var = mock.MagicMock()
         height_var.get.return_value = ''
@@ -128,7 +128,7 @@ class SaveTestCase(ConnectBoardTestCase):
     @mock.patch('photoeditor.base_board.messagebox.showerror')
     def test_height_entry_is_0(self, mock_msgbox, mock_filedialog):
         """Check that a converted image is not saved
-           when Save button is clicked and height_entry is 0.
+           when Save button is clicked because height is 0.
         """
         height_var = mock.MagicMock()
         height_var.get.return_value = 0
@@ -151,8 +151,8 @@ class SaveTestCase(ConnectBoardTestCase):
     @mock.patch('photoeditor.base_board.filedialog.asksaveasfilename')
     @mock.patch('photoeditor.base_board.messagebox.showerror')
     def test_save_path_is_selected(self, mock_err_msgbox, mock_filedialog, mock_info_msgbox):
-        """Check that a converted image is saved
-           when Save button is clicked and the image is not risezed.
+        """Check that a converted image is saved without resizing
+           when Save button is clicked.
         """
         width_var = mock.MagicMock()
         width_var.get.return_value = self.width
@@ -183,8 +183,8 @@ class SaveTestCase(ConnectBoardTestCase):
     @mock.patch('photoeditor.base_board.filedialog.asksaveasfilename')
     @mock.patch('photoeditor.base_board.messagebox.showerror')
     def test_save_path_is_selected_and_resized(self, mock_err_msgbox, mock_filedialog, mock_info_msgbox):
-        """Check that a converted image is saved
-           when Save button is clicked and the image risezed.
+        """Check that a converted image is resized and saved
+           when Save button is clicked.
         """
         width_var = mock.MagicMock()
         width_var.get.return_value = self.width * 2
