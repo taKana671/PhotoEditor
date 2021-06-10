@@ -13,8 +13,8 @@ from TkinterDnD2 import *
 from base_board import (BaseBoard, NoImageOnTheCanvasError, NotSelectedAreaError,
     InvalidSizeError)
 from board_window import BoardWindow
-from config import (PADY, PADX, FACE_CASCADE_PATH, EYE_CASCADE_PATH, ERROR,
-    RIGHT_CANVAS_MSG_1, RIGHT_CANVAS_MSG_2, IMAGE_SIZE_MSG_1)
+from config import (PADY, PADX, FACE_CASCADE_PATH, EYE_CASCADE_PATH, ERROR, RIGHT_CANVAS_MSG_1,
+    RIGHT_CANVAS_MSG_2, RIGHT_CANVAS_MSG_5, RIGHT_CANVAS_MSG_6, IMAGE_SIZE_MSG_1)
 
 
 Corner = namedtuple('Corner', 'x y')
@@ -193,7 +193,14 @@ class RightCanvas(PixelateBoard):
                     if pattern == 'area':
                         if not self.corners:
                             raise NotSelectedAreaError(RIGHT_CANVAS_MSG_2)
-                    if pattern == 'compare':
+                    elif pattern == 'detect':
+                        scale_factor, min_neighbors = self.get_detect_args()
+                        if scale_factor <= 1.0:
+                            raise InvalidSizeError(RIGHT_CANVAS_MSG_5)
+                        if min_neighbors < 0:
+                            raise InvalidSizeError(RIGHT_CANVAS_MSG_6)
+                        args = (scale_factor, min_neighbors)
+                    elif pattern == 'compare':
                         left_img = args[0]
                         if left_img.shape != self.source_img.shape:
                             raise InvalidSizeError(IMAGE_SIZE_MSG_1)
@@ -264,18 +271,16 @@ class RightCanvas(PixelateBoard):
             img_gray, scaleFactor=scale_factor, minNeighbors=min_neighbors)
         return faces, img_gray
 
-    @pixelation()
-    def detect_face(self):
-        scale_factor, min_neighbors = self.get_detect_args()
+    @pixelation('detect')
+    def detect_face(self, scale_factor, min_neighbors):
         faces, _ = self.get_faces(self.source_img, scale_factor, min_neighbors)
         for x, y, w, h in faces:
             self.current_img[y: y + h, x: x + w] = self.pixelate(
                 self.current_img[y: y + h, x: x + w], 0.1)
         self.create_image_cv(self.current_img)
 
-    @pixelation()
-    def detect_eye(self):
-        scale_factor, min_neighbors = self.get_detect_args()
+    @pixelation('detect')
+    def detect_eye(self, scale_factor, min_neighbors):
         faces, img_gray = self.get_faces(self.source_img, scale_factor, min_neighbors)
         eye_cascade = cv2.CascadeClassifier(EYE_CASCADE_PATH)
         for x, y, h, w in faces:

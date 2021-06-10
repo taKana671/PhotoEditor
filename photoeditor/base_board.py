@@ -9,7 +9,7 @@ import cv2
 from PIL import Image, ImageTk
 
 from config import (BOARD_W, BOARD_H, EXTENSIONS, FILETYPES, ERROR,
-    INFO, RIGHT_CANVAS_MSG_1, SAVE_MSG_1, SAVE_MSG_2, DIALOG_TITLE, GIF_FILETYPES)
+    INFO, RIGHT_CANVAS_MSG_1, SAVE_MSG_1, SAVE_MSG_2, SAVE_MSG_3, DIALOG_TITLE, GIF_FILETYPES)
 
 
 class InvalidSizeError(Exception):
@@ -86,16 +86,17 @@ class BaseBoard(tk.Canvas):
             try:
                 if self.current_img is None:
                     raise NoImageOnTheCanvasError(RIGHT_CANVAS_MSG_1)
-                if not (width := self.width_var.get()) or not (height := self.height_var.get()) or \
-                        not int(width) or not int(height):
+                if not (width := int(self.width_var.get())) or not (height := int(self.height_var.get())):
                     raise InvalidSizeError(SAVE_MSG_1)
                 save_path = filedialog.asksaveasfilename(
                     title=DIALOG_TITLE,
                     filetypes=FILETYPES)
                 if save_path:
-                    save_func(self, save_path)
+                    save_func(self, save_path, width, height)
                     messagebox.showinfo(INFO, SAVE_MSG_2)
-            except Exception as e:
+            except ValueError:
+                messagebox.showerror(ERROR, SAVE_MSG_3)
+            except (NoImageOnTheCanvasError, InvalidSizeError) as e:
                 messagebox.showerror(ERROR, e)
         return save_decorator
 
@@ -116,9 +117,7 @@ class BaseBoard(tk.Canvas):
         return save_decorator
 
     @save_image
-    def save_with_pil(self, save_path):
-        width = int(self.width_var.get())
-        height = int(self.height_var.get())
+    def save_with_pil(self, save_path, width, height):
         if self.current_img.size != (width, height):
             save_img = self.current_img.copy()
             save_img.thumbnail((width, height), Image.BICUBIC)
@@ -127,9 +126,7 @@ class BaseBoard(tk.Canvas):
             self.current_img.save(save_path)
 
     @save_image
-    def save_open_cv(self, save_path):
-        width = int(self.width_var.get())
-        height = int(self.height_var.get())
+    def save_open_cv(self, save_path, width, height):
         if self.current_img.shape[:2] != (height, width):
             nw, nh = self.get_cv_aspect(width, height)
             save_img = cv2.resize(self.current_img, dsize=(nw, nh))
