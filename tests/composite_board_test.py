@@ -9,8 +9,8 @@ from unittest import TestCase, mock, main
 from PIL import Image
 from TkinterDnD2 import *
 
-from photoeditor.config import (SAVE_MSG_1, SAVE_MSG_2, INFO, ERROR, RIGHT_CANVAS_MSG_1,
-    LEFT_CANVAS_MSG_1, LEFT_CANVAS_MSG_2, LEFT_CANVAS_MSG_3)
+from photoeditor.config import (SAVE_MSG_1, SAVE_MSG_2, SAVE_MSG_3, INFO, ERROR,
+    RIGHT_CANVAS_MSG_1, LEFT_CANVAS_MSG_1, LEFT_CANVAS_MSG_2, LEFT_CANVAS_MSG_3)
 from photoeditor.composite_board import EditorBoard, Corner, CompositeBoard
 from photoeditor.base_board import BaseBoard
 
@@ -77,7 +77,7 @@ class SaveTestCase(CompositeBoardTestCase):
         # error message
         call_args = mock_msgbox.call_args_list[0]
         self.assertEqual(call_args[0][0], ERROR)
-        self.assertEqual(str(call_args[0][1]), SAVE_MSG_1)
+        self.assertEqual(str(call_args[0][1]), SAVE_MSG_3)
 
     @mock.patch('photoeditor.base_board.filedialog.asksaveasfilename')
     @mock.patch('photoeditor.base_board.messagebox.showerror')
@@ -123,7 +123,7 @@ class SaveTestCase(CompositeBoardTestCase):
         # error message
         call_args = mock_msgbox.call_args_list[0]
         self.assertEqual(call_args[0][0], ERROR)
-        self.assertEqual(str(call_args[0][1]), SAVE_MSG_1)
+        self.assertEqual(str(call_args[0][1]), SAVE_MSG_3)
 
     @mock.patch('photoeditor.base_board.filedialog.asksaveasfilename')
     @mock.patch('photoeditor.base_board.messagebox.showerror')

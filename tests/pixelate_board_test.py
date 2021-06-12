@@ -11,8 +11,9 @@ import cv2
 import numpy as np
 from TkinterDnD2 import *
 
-from photoeditor.config import (SAVE_MSG_1, SAVE_MSG_2, INFO, ERROR, RIGHT_CANVAS_MSG_1,
-    RIGHT_CANVAS_MSG_2, EYE_CASCADE_PATH, IMAGE_SIZE_MSG_1)
+from photoeditor.config import (SAVE_MSG_1, SAVE_MSG_2, SAVE_MSG_3, INFO, ERROR,
+    RIGHT_CANVAS_MSG_1, RIGHT_CANVAS_MSG_2, EYE_CASCADE_PATH, IMAGE_SIZE_MSG_1,
+    RIGHT_CANVAS_MSG_5, RIGHT_CANVAS_MSG_6)
 from photoeditor.pixelate_board import EditorBoard, Corner
 
 
@@ -76,7 +77,7 @@ class SaveTestCase(PixelateBoardTestCase):
         # error message
         call_args = mock_msgbox.call_args_list[0]
         self.assertEqual(call_args[0][0], ERROR)
-        self.assertEqual(str(call_args[0][1]), SAVE_MSG_1)
+        self.assertEqual(str(call_args[0][1]), SAVE_MSG_3)
 
     @mock.patch('photoeditor.base_board.filedialog.asksaveasfilename')
     @mock.patch('photoeditor.base_board.messagebox.showerror')
@@ -122,7 +123,7 @@ class SaveTestCase(PixelateBoardTestCase):
         # error message
         call_args = mock_msgbox.call_args_list[0]
         self.assertEqual(call_args[0][0], ERROR)
-        self.assertEqual(str(call_args[0][1]), SAVE_MSG_1)
+        self.assertEqual(str(call_args[0][1]), SAVE_MSG_3)
 
     @mock.patch('photoeditor.base_board.filedialog.asksaveasfilename')
     @mock.patch('photoeditor.base_board.messagebox.showerror')
@@ -361,6 +362,44 @@ class DetectFaceTestCase(PixelateBoardTestCase):
         mock_create_image_cv.assert_called_once_with(self.test_img)
         mock_msgbox.assert_not_called()
 
+    @mock.patch('photoeditor.pixelate_board.RightCanvas.get_detect_args')
+    @mock.patch('photoeditor.pixelate_board.RightCanvas.create_image_cv')
+    @mock.patch('photoeditor.pixelate_board.RightCanvas.get_faces')
+    @mock.patch('photoeditor.pixelate_board.messagebox.showerror')
+    def test_scale_facter_invalid(self, mock_msgbox, mock_get_faces,
+                                  mock_create_image_cv, mock_detect_args):
+        """Check that face detection fails when Face Detect button
+           is clicked because scale_factor is 1.0 or less.
+        """
+        mock_detect_args.return_value = (1.0, 3)
+        with mock.patch.object(self.editor.right_canvas, 'img_path', self.test_path):
+            self.editor.right_canvas.detect_face()
+        mock_create_image_cv.assert_not_called()
+        mock_get_faces.assert_not_called()
+        # error message
+        call_args = mock_msgbox.call_args_list[0]
+        self.assertEqual(call_args[0][0], ERROR)
+        self.assertEqual(str(call_args[0][1]), RIGHT_CANVAS_MSG_5)
+
+    @mock.patch('photoeditor.pixelate_board.RightCanvas.get_detect_args')
+    @mock.patch('photoeditor.pixelate_board.RightCanvas.create_image_cv')
+    @mock.patch('photoeditor.pixelate_board.RightCanvas.get_faces')
+    @mock.patch('photoeditor.pixelate_board.messagebox.showerror')
+    def test_min_neighbors_invalid(self, mock_msgbox, mock_get_faces,
+                                   mock_create_image_cv, mock_detect_args):
+        """Check that face detection fails when Face Detect button
+           is clicked because min_neighbors is less than 0.
+        """
+        mock_detect_args.return_value = (1.03, -0.5)
+        with mock.patch.object(self.editor.right_canvas, 'img_path', self.test_path):
+            self.editor.right_canvas.detect_face()
+        mock_create_image_cv.assert_not_called()
+        mock_get_faces.assert_not_called()
+        # error message
+        call_args = mock_msgbox.call_args_list[0]
+        self.assertEqual(call_args[0][0], ERROR)
+        self.assertEqual(str(call_args[0][1]), RIGHT_CANVAS_MSG_6)
+
 
 class DetectEyeTestCase(PixelateBoardTestCase):
     """Test for detect_eye
@@ -405,6 +444,44 @@ class DetectEyeTestCase(PixelateBoardTestCase):
         mock_detect_multi_scale.assert_called_once()
         mock_create_image_cv.assert_called_once_with(self.test_img)
         mock_msgbox.assert_not_called()
+
+    @mock.patch('photoeditor.pixelate_board.RightCanvas.get_detect_args')
+    @mock.patch('photoeditor.pixelate_board.RightCanvas.create_image_cv')
+    @mock.patch('photoeditor.pixelate_board.RightCanvas.get_faces')
+    @mock.patch('photoeditor.pixelate_board.messagebox.showerror')
+    def test_scale_facter_invalid(self, mock_msgbox, mock_get_faces,
+                                  mock_create_image_cv, mock_detect_args):
+        """Check that eye detection fails when Face Detect button
+           is clicked because scale_factor is 1.0 or less.
+        """
+        mock_detect_args.return_value = (1.0, 3)
+        with mock.patch.object(self.editor.right_canvas, 'img_path', self.test_path):
+            self.editor.right_canvas.detect_eye()
+        mock_create_image_cv.assert_not_called()
+        mock_get_faces.assert_not_called()
+        # error message
+        call_args = mock_msgbox.call_args_list[0]
+        self.assertEqual(call_args[0][0], ERROR)
+        self.assertEqual(str(call_args[0][1]), RIGHT_CANVAS_MSG_5)
+
+    @mock.patch('photoeditor.pixelate_board.RightCanvas.get_detect_args')
+    @mock.patch('photoeditor.pixelate_board.RightCanvas.create_image_cv')
+    @mock.patch('photoeditor.pixelate_board.RightCanvas.get_faces')
+    @mock.patch('photoeditor.pixelate_board.messagebox.showerror')
+    def test_min_neighbors_invalid(self, mock_msgbox, mock_get_faces,
+                                   mock_create_image_cv, mock_detect_args):
+        """Check that eye detection fails when Face Detect button
+           is clicked because min_neighbors is less than 0.
+        """
+        mock_detect_args.return_value = (1.03, -0.5)
+        with mock.patch.object(self.editor.right_canvas, 'img_path', self.test_path):
+            self.editor.right_canvas.detect_eye()
+        mock_create_image_cv.assert_not_called()
+        mock_get_faces.assert_not_called()
+        # error message
+        call_args = mock_msgbox.call_args_list[0]
+        self.assertEqual(call_args[0][0], ERROR)
+        self.assertEqual(str(call_args[0][1]), RIGHT_CANVAS_MSG_6)
 
 
 class CompareImagesTestCase(PixelateBoardTestCase):
