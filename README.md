@@ -26,7 +26,7 @@ Put folder 'tkdnd2.8' in that tkdnd2.8-win32-x86_64.tar.gz in tcl or Library/lib
 
 ```
 >>>cd photoeditor
->>>python towercrash.py
+>>>python window.py
 ```
 
 How to use the processing tool
