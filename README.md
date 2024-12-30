@@ -18,6 +18,17 @@ Python image processing tool
 * Windows10
 
 # Usage
+
+Download TkinterDnD2-0.3.zip from https://sourceforge.net/projects/tkinterdnd/files/TkinterDnD2/.  
+Put folder 'TkinterDnD2' in that zip file in 'lib/site-packages'.  
+Download tkdnd2.8-win32-x86_64.tar.gz from https://sourceforge.net/projects/tkdnd/files/.  
+Put folder 'tkdnd2.8' in that tkdnd2.8-win32-x86_64.tar.gz in tcl or Library/lib (the same dir with tk8.6).
+
+```
+>>>cd photoeditor
+>>>python towercrash.py
+```
+
 How to use the processing tool
 - [Convert](#Convert)
 - [Composite](#Composite)
